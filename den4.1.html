@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Втори работен ден – практика по делова комуникация</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=PT+Sans:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF2F5; --sheet:#FFFFFF; --ink:#16304D; --soft:#4F6378; --line:#CBD5DF;
+  --stamp:#5634C4; --stamp-soft:#ECE7FB; --note:#FFE27A; --note-ink:#3D3200;
+  --ok:#1E7A4F; --ok-soft:#E1F3EA; --bad:#B3361E; --bad-soft:#FBE6E1;
+  --btn:#16304D; --btn-ink:#FFFFFF; --pick:#DCE8F5;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#111A24; --sheet:#1A2633; --ink:#E7EEF5; --soft:#9FB1C3; --line:#2F4254;
+    --stamp:#A792FF; --stamp-soft:#2A2448; --note:#5A4C10; --note-ink:#FFF1B8;
+    --ok:#6DD3A0; --ok-soft:#163528; --bad:#FF9A85; --bad-soft:#3D1E18;
+    --btn:#E7EEF5; --btn-ink:#111A24; --pick:#24384D;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111A24; --sheet:#1A2633; --ink:#E7EEF5; --soft:#9FB1C3; --line:#2F4254;
+  --stamp:#A792FF; --stamp-soft:#2A2448; --note:#5A4C10; --note-ink:#FFF1B8;
+  --ok:#6DD3A0; --ok-soft:#163528; --bad:#FF9A85; --bad-soft:#3D1E18;
+  --btn:#E7EEF5; --btn-ink:#111A24; --pick:#24384D;
+  color-scheme:dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--paper)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"PT Sans",Arial,sans-serif;font-size:18px;line-height:1.5}
+h1,h2,h3{font-family:Rubik,"PT Sans",Arial,sans-serif;line-height:1.15;margin:0}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--stamp);outline-offset:2px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--sheet)}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--sheet);border-bottom:1px solid var(--line)}
+.top-in{max-width:720px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px}
+.clock{font-family:Rubik,Arial,sans-serif;font-weight:800;font-size:22px;letter-spacing:.02em;min-width:64px}
+.bar{flex:1;height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--stamp);width:0;transition:width .4s}
+.pts{font-family:Rubik,Arial,sans-serif;font-weight:700;white-space:nowrap}
+
+main{max-width:720px;margin:0 auto;padding:20px 16px 48px}
+.sheet{background:var(--sheet);border:1px solid var(--line);border-radius:6px;padding:22px 20px;position:relative}
+.sheet + .sheet{margin-top:16px}
+.who{color:var(--soft);font-size:16px;margin:0 0 6px}
+.q{font-family:Rubik,Arial,sans-serif;font-weight:700;font-size:21px;margin:0 0 14px}
+p{margin:0 0 12px}
+.note{background:var(--note);color:var(--note-ink);padding:12px 14px;border-radius:4px;margin:0 0 14px;font-size:17px}
+.quote{border-left:4px solid var(--stamp);padding:6px 0 6px 14px;margin:0 0 14px;font-style:italic}
+
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:block;width:100%;text-align:left;background:var(--sheet);border:2px solid var(--line);border-radius:6px;padding:12px 14px;cursor:pointer;line-height:1.4}
+.opt[aria-pressed="true"]{border-color:var(--stamp);background:var(--pick)}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt:disabled{cursor:default}
+
+.seq{display:flex;flex-direction:column;gap:8px;min-height:48px;margin:0 0 14px;padding:10px;border:2px dashed var(--line);border-radius:6px}
+.seq:empty::before{content:"Докоснете редовете долу в правилния ред";color:var(--soft);font-size:16px}
+.chip{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:var(--sheet);border:2px solid var(--line);border-radius:6px;padding:10px 12px;cursor:pointer;line-height:1.4}
+.chip b{font-family:Rubik,Arial,sans-serif;color:var(--stamp);min-width:22px}
+.chip.right{border-color:var(--ok);background:var(--ok-soft)}
+.chip.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.pool{display:flex;flex-direction:column;gap:8px}
+
+.mail{border:1px solid var(--line);border-radius:6px;padding:16px;background:var(--sheet);line-height:2.1}
+.tok{display:inline;text-align:left;border:none;background:none;padding:2px 4px;border-radius:4px;cursor:pointer;border-bottom:2px dotted var(--soft)}
+.tok[aria-pressed="true"]{background:var(--stamp-soft);border-bottom-color:var(--stamp)}
+.tok.hit{background:var(--ok-soft);border-bottom:2px solid var(--ok)}
+.tok.miss{background:var(--bad-soft);border-bottom:2px solid var(--bad)}
+.tok.false{background:var(--bad-soft);text-decoration:line-through}
+
+.field{margin:0 0 14px}
+.field label{display:block;font-weight:700;margin:0 0 6px}
+select,textarea,input[type=text]{width:100%;font:inherit;color:var(--ink);background:var(--sheet);border:2px solid var(--line);border-radius:6px;padding:10px 12px}
+textarea{min-height:76px;resize:vertical}
+select.right{border-color:var(--ok);background:var(--ok-soft)}
+select.wrong{border-color:var(--bad);background:var(--bad-soft)}
+
+.msg{background:var(--stamp-soft);border-radius:6px;padding:16px;margin:0 0 12px;font-size:19px}
+.timer{font-family:Rubik,Arial,sans-serif;font-weight:800;font-size:40px;color:var(--stamp)}
+
+.fb{margin-top:16px;padding:14px 16px;border-radius:6px;background:var(--ok-soft);border-left:5px solid var(--ok)}
+.fb.mid{background:var(--note);color:var(--note-ink);border-left-color:#B08A00}
+.fb.low{background:var(--bad-soft);border-left-color:var(--bad)}
+.fb h3{font-size:18px;margin:0 0 4px}
+
+.actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.btn{background:var(--btn);color:var(--btn-ink);border:none;border-radius:6px;padding:14px 22px;font-family:Rubik,Arial,sans-serif;font-weight:700;font-size:18px;cursor:pointer}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.actions .btn.ghost:first-child{margin-right:auto}
+
+.hero h1{font-size:40px;font-weight:800;margin:0 0 12px}
+.hero .lead{font-size:20px;color:var(--soft)}
+.day{display:grid;grid-template-columns:64px 1fr;gap:4px 12px;margin:16px 0 0;padding:0;list-style:none}
+.day li{display:contents}
+.day span{font-family:Rubik,Arial,sans-serif;font-weight:700;color:var(--soft)}
+.day li.done span,.day li.done em{color:var(--ok)}
+.day em{font-style:normal}
+
+.stamp{position:absolute;right:18px;top:16px;transform:rotate(-12deg);border:4px double var(--stamp);color:var(--stamp);font-family:Rubik,Arial,sans-serif;font-weight:800;font-size:20px;padding:4px 10px;border-radius:6px;opacity:.9;animation:thump .35s ease-out}
+@keyframes thump{from{transform:rotate(-12deg) scale(1.8);opacity:0}to{transform:rotate(-12deg) scale(1);opacity:.9}}
+@media (prefers-reduced-motion:reduce){.stamp{animation:none}.bar i{transition:none}}
+
+.cert{text-align:center;padding:36px 20px 40px;border:6px double var(--stamp)}
+.cert h1{font-size:30px;margin:0 0 8px}
+.cert .name{font-family:Rubik,Arial,sans-serif;font-size:32px;font-weight:800;margin:18px 0 6px}
+.cert .score{font-size:56px;font-family:Rubik,Arial,sans-serif;font-weight:800;color:var(--stamp);margin:12px 0 0}
+.cert .stamp{position:static;display:inline-block;margin-top:18px;font-size:22px}
+.list{margin:10px 0 0;padding-left:20px}
+.small{font-size:15px;color:var(--soft)}
+@media (max-width:420px){.hero h1{font-size:32px}.q{font-size:19px}}
+</style>
+</head>
+<body>
+<header class="top" id="top" hidden>
+  <div class="top-in">
+    <div class="clock" id="clock">08:30</div>
+    <div class="bar" aria-hidden="true"><i id="barfill"></i></div>
+    <div class="pts" id="pts">0 точки</div>
+  </div>
+</header>
+<main id="app"></main>
+
+<script>
+const TASKS = [
+ {time:"08:30", title:"Разговор с началника", intro:"Втори работен ден. Началникът ви вика за кратък разговор, за да ви опознае по-добре.", steps:[
+  {type:"mc", who:"Началникът пита:", say:"„Защо искате да работите при нас?“", q:"Кой отговор е най-добър?", opts:[
+    "„Защото нямам друг избор, няма друга работа.“",
+    "„Искам да работя с хора и да помагам. Тук мога да използвам наученото в курса по офис дейности и да расте опитът ми.“",
+    "„Чух, че тук не се работи много.“"], a:1,
+   why:"Добрият отговор показва желание и връзка с работата. Отговорите „нямам избор“ и „не се работи много“ звучат незаинтересовано."},
+  {type:"write", q:"Отговорете на въпроса „Коя е най-силната ви страна?“", note:"Не се оценява – важното е да имате готов отговор за интервю. Всяко поле – едно-две изречения.", fields:[
+    ["Моята силна страна","Например: точна съм, търпелива съм, бързо уча"],["Пример от живота","Кога сте го показали?"],["Как ще помогне в работата","Защо е важно за офиса?"]],
+   done:"Силна страна + пример + полза за работата. Така отговорът звучи истински, а не като хвалба."}
+ ]},
+ {time:"09:00", title:"Приемане на заявление", intro:"Гражданка идва на гишето, за да подаде заявление за удостоверение.", steps:[
+  {type:"order", q:"Подредете стъпките при приемане на заявление", items:[
+    "Поздравявам: „Добър ден! С какво мога да помогна?“",
+    "Проверявам дали заявлението е попълнено и подписано",
+    "Регистрирам го – входящ номер и дата",
+    "Казвам номера и кога ще е готово",
+    "Изпращам: „Ще ви се обадим, когато е готово. Приятен ден!“"],
+   why:"Поздрав → проверка → регистриране → номер и срок → изпращане. Без проверка рискуваме непълен документ."},
+  {type:"mc", who:"Ситуация:", say:"В заявлението липсва подпис.", q:"Какво правите?", opts:[
+    "Приемам го – ще го подпише някой друг път",
+    "Връщам го без обяснение",
+    "„Тук липсва подпис – моля, подпишете тук и веднага ще го регистрирам.“"], a:2,
+   why:"Показвате точно какво липсва и помагате да се поправи на място."},
+  {type:"mc", who:"Ситуация:", say:"Човек иска да му кажете какви документи е подал съседът му.", q:"Какво отговаряте?", opts:[
+    "„Не мога да давам информация за други хора – това са лични данни.“",
+    "Казвам му, щом е съсед",
+    "„Елате утре, ще ви кажа.“"], a:0,
+   why:"Личните данни на гражданите се пазят. Информация се дава само на самия човек или на упълномощен."},
+  {type:"mc", who:"Ситуация:", say:"Възрастен човек не вижда добре и не може да попълни бланката.", q:"Какво правите?", opts:[
+    "„Елате с някой, който да ви я попълни.“",
+    "Помагам да я попълним заедно, той проверява и подписва",
+    "Попълвам я и подписвам вместо него"], a:1,
+   why:"Помагате, но подписът е негов – никой не подписва вместо друг човек."}
+ ]},
+ {time:"09:30", title:"Съобщение за кмета", intro:"Звъни телефонът. Търсят кмета, а той е на обиколка в селата. Ще видите съобщението само за малко – запомнете го.", steps:[
+  {type:"memory", seconds:25, text:"„Добър ден, обажда се Надежда Колева от Областната администрация. Срещата за пътя Рудозем – Смолян се мести от вторник за четвъртък, 10:30, в зала 2. Кметът трябва да носи справката за ремонтите. Телефонът ми е 0889 444 555.“",
+   fields:[
+    ["Кой се обади?",["Надежда Колева","Надежда Петрова","Колю Наденов"],0],
+    ["Откъде?",["От общината в Смолян","От Областната администрация","От пътната фирма"],1],
+    ["Кога е новата среща?",["Вторник, 10:30","Четвъртък, 10:30","Четвъртък, 13:00"],1],
+    ["Къде?",["Зала 2","Зала 3","Кабинета на кмета"],0],
+    ["Какво да носи кметът?",["Договора за пътя","Справката за ремонтите","Списъка с участниците"],1],
+    ["Телефон",["0889 444 555","0889 555 444","0888 444 555"],0]],
+   why:"Промяна на час и място е най-лесно да се обърка. Затова записваме, докато слушаме."},
+  {type:"mc", q:"Какво още пишете накрая на бележката?", opts:[
+    "Нищо повече не трябва",
+    "Какво е времето днес",
+    "Датата, часа на обаждането и своето име"], a:2,
+   why:"Така кметът знае кога е било обаждането и кого да пита, ако има въпрос."}
+ ]},
+ {time:"10:00", title:"Похвала и забележка", intro:"Днес ще разберете, че и похвалата, и забележката трябва да са конкретни.", steps:[
+  {type:"mc", who:"Ситуация:", say:"Новата колежка Анна е направила много подредена справка.", q:"Как я похвалите?", opts:[
+    "„Супер си!“",
+    "„Справката е много ясна – таблицата по месеци помогна на кмета веднага да види разликата.“",
+    "Не казвам нищо – това ѝ е работата"], a:1,
+   why:"Конкретната похвала казва какво точно е добро – така човекът знае какво да повтори."},
+  {type:"mc", who:"Ситуация:", say:"Колега закъснява почти всеки ден и вие поемате посетителите му.", q:"Какво правите?", opts:[
+    "Говоря с него насаме: „Когато закъсняваш, аз поемам и твоите посетители и не смогвам. Можеш ли да идваш навреме?“",
+    "Оплаквам се на всички колеги",
+    "Мълча, но се сърдя"], a:0,
+   why:"Казвате насаме, конкретно, какво се случва и как ви засяга. Без обиди и без клюки."},
+  {type:"mc", who:"Посетител ви казва:", say:"„Много ми помогнахте, благодаря!“", q:"Как отговаряте?", opts:[
+    "„Нищо не съм направил.“",
+    "„Е, това ми е работата.“",
+    "„Радвам се, че помогнах! Приятен ден.“"], a:2,
+   why:"Похвалата се приема с усмивка и благодарност – не се омаловажава."}
+ ]},
+ {time:"10:30", title:"Поръчка по телефона", intro:"Хартията и тонерът свършват. Обаждате се на фирмата доставчик да поръчате. Изберете най-добрата реплика на всяка стъпка.", steps:[
+  {type:"mc", who:"Фирмата вдига:", say:"„Офис Снаб, добър ден.“", q:"Как започвате?", opts:[
+    "„Добър ден, обаждам се от Община Рудозем, казвам се [вашето име]. Бих искал/а да направя поръчка.“",
+    "„Ало, искам хартия.“",
+    "„Кой е на телефона?“"], a:0, why:"Поздрав, откъде се обаждате, кой сте и защо."},
+  {type:"mc", who:"Фирмата:", say:"„Разбира се. Какво ви трябва?“", q:"Казвате:", opts:[
+    "„Ами хартия и малко тонер.“",
+    "„10 пакета бяла хартия А4 и 2 тонер касети – моделът е [от етикета на принтера].“",
+    "„Каквото обикновено поръчваме.“"], a:1, why:"Точни количества и модел – иначе ще дойде грешна стока."},
+  {type:"mc", who:"Фирмата:", say:"„Къде да доставим?“", q:"Казвате:", opts:[
+    "„В общината.“",
+    "„Знаете къде сме.“",
+    "„Община Рудозем, деловодството, на мое име, телефон [ваш номер].“"], a:2, why:"Пълен адрес, на чие име и телефон за връзка."},
+  {type:"mc", who:"Фирмата:", say:"„Добре, ще доставим в петък.“", q:"Завършвате:", opts:[
+    "„Значи: 10 пакета хартия А4 и 2 тонер касети, доставка в петък в деловодството. Благодаря, приятен ден!“",
+    "„Ок, чао.“",
+    "Затварям веднага"], a:0, why:"Обобщавате поръчката – така и двете страни са сигурни, че са се разбрали."}
+ ]},
+ {time:"11:00", title:"Лош отговор на гражданин", intro:"Колега е написал отговор на гражданин, който пита кога ще е готово удостоверението му. Намерете грешките, преди писмото да тръгне.", steps:[
+  {type:"spot", q:"Докоснете всички грешки в имейла", toks:[
+    ["Тема: Re: Re: Re:",1,"Неясна тема – трябва „Удостоверение за наследници – срок за издаване“."],["\n"],
+    ["Здравей, Иване,",1,"На „ти“ към гражданин – трябва „Уважаеми господин Петров,“."],["\n"],
+    ["незнам",1,"Правописна грешка (не знам) – и не помага на човека."],
+    ["кога ще е готово удостоверението ти.",1,"„Ти“ вместо учтивото „Ви“."],["\n"],
+    ["Заявлението Ви е с вх. № 94-00-210.",0],["\n"],
+    ["Може би другата седмица, може би по-късно.",1,"Неясно. Трябва конкретен срок или: „Ще проверя и ще Ви се обадя до петък.“"],["\n"],
+    ["Поздрави, деловодството",1,"Без име и телефон; „Поздрави“ е неофициално – трябва „С уважение,“ и пълен подпис."]],
+   why:"Към граждани пишем на „Вие“, без правописни грешки, с конкретен срок и пълен подпис."}
+ ]},
+ {time:"11:15", title:"Отговор на запитване", intro:"Г-жа Колева пише: „Какви документи са ми нужни, за да получа удостоверение за наследници?“", steps:[
+  {type:"order", q:"Подредете отговора правилно", items:[
+    "Тема: Документи за удостоверение за наследници",
+    "Уважаема госпожо Колева,",
+    "Благодарим Ви за запитването.",
+    "Необходими са заявление по образец и лична карта.",
+    "Можете да ги подадете в деловодството от понеделник до петък, 8:30 – 17:00.",
+    "С уважение,",
+    "Мария Иванова, деловодител, тел. [_____]"],
+   why:"Тема → обръщение → благодарност → отговор → какво да направи → поздрав → подпис."},
+  {type:"mc", q:"Г-жа Колева пита нещо, което не знаете. Какво правите?", opts:[
+    "Пиша каквото ми се струва вярно",
+    "„Ще проверя и ще Ви отговоря до четвъртък.“",
+    "Не отговарям на този въпрос"], a:1,
+   why:"По-добре кратко забавяне с точен отговор, отколкото бърз грешен отговор."}
+ ]},
+ {time:"11:40", title:"Кой документ е това?", intro:"Пощата е пристигнала. Определете вида на всеки документ.", steps:[
+  {type:"match", q:"Изберете вида на всеки документ", choices:["Покана","Справка","Молба","Жалба","Служебно писмо"], rows:[
+    ["„Каним Ви на 20.11 от 10 ч. в читалището за обсъждане на бюджета.“",0],
+    ["„Брой подадени заявления през октомври: 45, от тях 12 за удостоверения…“",1],
+    ["„Моля да ми бъде дадена отсрочка за плащане на данъка до края на месеца.“",2],
+    ["„Оплаквам се, че вече месец никой не почиства контейнерите на моята улица.“",3],
+    ["„Уважаеми господин Областен управител, във връзка с Ваше писмо изх. № 12…“",4]],
+   why:"Покана – кани; справка – дава данни; молба – иска услуга по преценка; жалба – оплаква се; служебно писмо – между организации."}
+ ]},
+ {time:"12:00", title:"Заявление", intro:"Гражданин ви моли да му покажете как се пише заявление за удостоверение за наследници.", steps:[
+  {type:"order", q:"Подредете частите на заявлението", items:[
+    "ДО кмета на Община Рудозем",
+    "ЗАЯВЛЕНИЕ",
+    "ОТ Иван Петров Петков, адрес, телефон",
+    "Текст: „Моля да ми бъде издадено…“",
+    "Приложения: копие от акт за смърт",
+    "Дата и подпис"],
+   why:"До кого → заглавие → от кого (с адрес и телефон) → текст → приложения → дата и подпис."},
+  {type:"mc", q:"Кое е правилното начало на текста?", opts:[
+    "„Искам веднага удостоверение!“",
+    "„Моля да ми бъде издадено удостоверение за наследници на Петър Иванов Петков.“",
+    "„Здравейте, трябва ми една бумага.“"], a:1, why:"Учтиво, ясно и с точно име – „Моля да ми бъде издадено…“."},
+  {type:"mc", q:"Какво получава гражданинът, след като подаде заявлението?", opts:[
+    "Входящ номер и срок кога да провери",
+    "Нищо – да чака да му се обадят",
+    "Обещание, че ще стане днес"], a:0, why:"С входящия номер винаги може да провери докъде е стигнало заявлението."}
+ ]}
+];
+
+const KEY="den4-praktika-v2";
+const MAX = TASKS.reduce((n,t)=>n+t.steps.length*10,0);
+let S = load() || {name:"", t:-1, s:0, scores:{}, ans:{}};
+if(!S.ans) S.ans={};
+const app = document.getElementById("app");
+
+function load(){ try{ const v=localStorage.getItem(KEY); return v?JSON.parse(v):null }catch(e){ return null } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)) }catch(e){} }
+function total(){ return Object.values(S.scores).reduce((a,b)=>a+b,0) }
+function el(tag, attrs={}, kids=[]){
+  const e=document.createElement(tag);
+  for(const [k,v] of Object.entries(attrs)){
+    if(k==="class") e.className=v; else if(k==="text") e.textContent=v;
+    else if(k.startsWith("on")) e.addEventListener(k.slice(2),v); else e.setAttribute(k,v);
+  }
+  for(const c of [].concat(kids)) if(c!=null) e.append(c);
+  return e;
+}
+function shuffle(a){ const b=a.map((x,i)=>[x,i]); for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]} return b }
+function header(){
+  const top=document.getElementById("top");
+  top.hidden = S.t<0;
+  if(S.t>=0 && S.t<TASKS.length) document.getElementById("clock").textContent=TASKS[S.t].time;
+  if(S.t>=TASKS.length) document.getElementById("clock").textContent="12:10";
+  const doneSteps = Object.keys(S.scores).length, all = MAX/10;
+  document.getElementById("barfill").style.width = (100*doneSteps/all)+"%";
+  document.getElementById("pts").textContent = total()+" точки";
+}
+function feedback(score, why){
+  const cls = score>=10?"":(score>=5?" mid":" low");
+  const head = score>=10?"Отлично! +10":(score>0?`Почти! +${score}`:"Не съвсем. +0");
+  return el("div",{class:"fb"+cls,role:"status"},[el("h3",{text:head}), el("p",{text:why})]);
+}
+
+let IV=null;
+function backBtn(){ return el("button",{class:"btn ghost",text:"← Назад",onclick:prevStep}) }
+function prevStep(){
+  if(S.t>=TASKS.length){ S.t=TASKS.length-1; S.s=TASKS[S.t].steps.length-1; }
+  else if(S.s>0){ S.s--; }
+  else if(S.s===0){ S.s=-1; }
+  else if(S.t>0){ S.t--; S.s=TASKS[S.t].steps.length-1; }
+  else { S.t=-1; S.s=0; }
+  save(); render();
+}
+function render(){
+  if(IV){ clearInterval(IV); IV=null; }
+  header(); app.innerHTML=""; window.scrollTo(0,0);
+  if(S.t<0) return start();
+  if(S.t>=TASKS.length) return finish();
+  const task=TASKS[S.t];
+  if(S.s<0) return taskIntro(task);
+  step(task, task.steps[S.s]);
+}
+
+function start(){
+  const inp=el("input",{type:"text",id:"nm",autocomplete:"name",placeholder:"Име и фамилия"});
+  inp.value=S.name||"";
+  const go=el("button",{class:"btn",text:"Започни работния ден",onclick:()=>{
+    const v=inp.value.trim(); if(!v){inp.focus();return}
+    S.name=v; S.t=0; S.s=-1; save(); render();
+  }});
+  inp.addEventListener("keydown",e=>{if(e.key==="Enter") go.click()});
+  const list=el("ul",{class:"day"}, TASKS.map(t=>el("li",{},[el("span",{text:t.time}),el("em",{text:t.title})])));
+  app.append(el("section",{class:"sheet hero"},[
+    el("h1",{text:"Втори работен ден"}),
+    el("p",{class:"lead",text:"Вчера беше първият ви ден в общината. Днес ви чакат нови посетители, нови обаждания и нови документи."}),
+    el("p",{text:"Всяка задача носи до 10 точки. Накрая получавате удостоверение с резултата си – покажете го на лектора."}),
+    list
+  ]), el("section",{class:"sheet"},[
+    el("div",{class:"field"},[el("label",{for:"nm",text:"Как се казвате?"}), inp]),
+    el("div",{class:"actions"},[go])
+  ]));
+}
+
+function taskIntro(task){
+  const n=S.t+1;
+  app.append(el("section",{class:"sheet"},[
+    el("p",{class:"who",text:`${task.time} · задача ${n} от ${TASKS.length}`}),
+    el("h2",{class:"q",text:task.title}),
+    el("p",{text:task.intro}),
+    el("div",{class:"actions"},[backBtn(), el("button",{class:"btn",text:"Започни задачата",onclick:()=>{S.s=0;save();render()}})])
+  ]));
+}
+
+function nextStep(){
+  const task=TASKS[S.t];
+  if(S.s+1<task.steps.length){ S.s++; save(); render(); }
+  else { S.t++; S.s=-1; save(); taskDone(task); }
+}
+function taskDone(task){
+  header(); app.innerHTML=""; window.scrollTo(0,0);
+  const idx=TASKS.indexOf(task);
+  const got=task.steps.reduce((a,_,i)=>a+(S.scores[idx+"-"+i]||0),0), max=task.steps.length*10;
+  app.append(el("section",{class:"sheet"},[
+    el("div",{class:"stamp",text:"ИЗПЪЛНЕНО"}),
+    el("p",{class:"who",text:task.time}),
+    el("h2",{class:"q",text:task.title}),
+    el("p",{text:`Получихте ${got} от ${max} точки.`}),
+    el("div",{class:"actions"},[backBtn(), el("button",{class:"btn",text:S.t<TASKS.length?"Към следващата задача":"Виж резултата",onclick:render})])
+  ]));
+}
+
+function step(task, st){
+  const key=S.t+"-"+S.s;
+  S.ans=S.ans||{};
+  const put=v=>{ S.ans[key]=v; save(); };
+  const A=S.ans[key];
+  const box=el("section",{class:"sheet"});
+  box.append(el("p",{class:"who",text:`${task.time} · ${task.title} · стъпка ${S.s+1} от ${task.steps.length}`}));
+  if(st.who) box.append(el("p",{class:"who",text:st.who}));
+  if(st.say) box.append(el("p",{class:"quote",text:st.say}));
+  const body=el("div"); box.append(body);
+  const check=el("button",{class:"btn",text:"Провери",disabled:""});
+  const next=el("button",{class:"btn",text:"Напред",hidden:""});
+  const fix=el("button",{class:"btn ghost",text:"Поправи отговора",hidden:"",onclick:()=>{ delete S.scores[key]; save(); render(); }});
+  const acts=el("div",{class:"actions"},[backBtn(),check,fix,next]);
+  box.append(acts); app.append(box);
+  next.addEventListener("click",nextStep);
+  const ready=v=>{ if(v) check.removeAttribute("disabled"); else check.setAttribute("disabled","") };
+  const R={mc,order,memory,spot,match,write}[st.type](st, body, ready, A, put, key in S.scores);
+  function doCheck(focus){
+    const sc=R(); S.scores[key]=sc; save(); header();
+    check.hidden=true; next.hidden=false; fix.hidden=false;
+    box.insertBefore(feedback(sc, st.why||st.done||""), acts);
+    if(focus) next.focus();
+  }
+  check.addEventListener("click",()=>doCheck(true));
+  if(key in S.scores && A!=null) doCheck(false);
+}
+
+function mc(st, body, ready, A, put){
+  body.append(el("h2",{class:"q",text:st.q}));
+  let pick=-1; const order=shuffle(st.opts);
+  const choose=(b,i)=>{ pick=i; btns.forEach(x=>x.setAttribute("aria-pressed","false")); b.setAttribute("aria-pressed","true"); ready(true); };
+  const btns=order.map(([t,i])=>el("button",{class:"opt","aria-pressed":"false",text:t,onclick:e=>{ choose(e.currentTarget,i); put(i); }}));
+  btns.forEach((b,k)=>b.dataset.i=order[k][1]);
+  body.append(el("div",{class:"opts"},btns));
+  if(A!=null){ const b=btns.find(x=>+x.dataset.i===A); if(b) choose(b,A); }
+  return ()=>{
+    btns.forEach(b=>{ b.disabled=true; const i=+b.dataset.i; if(i===st.a) b.classList.add("right"); else if(i===pick) b.classList.add("wrong") });
+    return pick===st.a?10:0;
+  };
+}
+
+function order(st, body, ready, A, put){
+  body.append(el("h2",{class:"q",text:st.q}));
+  const seq=el("div",{class:"seq"}), pool=el("div",{class:"pool"});
+  const chosen=[];
+  const refresh=()=>{
+    [...seq.children].forEach((c,k)=>c.querySelector("b").textContent=k+1);
+    [...pool.children].forEach(c=>c.querySelector("b").textContent="");
+    ready(chosen.length===st.items.length);
+  };
+  const move=(b,i)=>{
+    if(b.parentNode===pool){ seq.append(b); chosen.push(i) } else { pool.append(b); chosen.splice(chosen.indexOf(i),1) }
+    refresh();
+  };
+  const chips={};
+  shuffle(st.items).forEach(([t,i])=>{
+    const c=el("button",{class:"chip",onclick:e=>{ move(e.currentTarget,i); put(chosen.slice()); }},[el("b"),el("span",{text:t})]);
+    c.dataset.i=i; chips[i]=c; pool.append(c);
+  });
+  body.append(seq,pool);
+  if(Array.isArray(A)) A.forEach(i=>{ if(chips[i]) move(chips[i],i) });
+  return ()=>{
+    let ok=0; [...seq.children].forEach((c,k)=>{ c.disabled=true; if(+c.dataset.i===k){ok++;c.classList.add("right")} else c.classList.add("wrong") });
+    if(ok<st.items.length){
+      body.append(el("p",{class:"who",text:"Правилният ред:"}), el("ol",{class:"list"},st.items.map(t=>el("li",{text:t}))));
+    }
+    return Math.round(10*ok/st.items.length);
+  };
+}
+
+function memory(st, body, ready, A, put){
+  const ans=Object.assign({hidden:false,v:[]},A||{});
+  body.append(el("h2",{class:"q",text:"Прочетете съобщението"}));
+  const msg=el("div",{class:"msg",text:st.text});
+  let left=st.seconds; const t=el("div",{class:"timer",text:left+" с"});
+  const hide=el("button",{class:"btn ghost",text:"Запомних – скрий"});
+  body.append(msg,t,hide);
+  const form=el("div",{hidden:""});
+  const sels=st.fields.map(([lab,opts],k)=>{
+    const s=el("select",{id:"f"+k},[el("option",{value:"",text:"– изберете –"})].concat(opts.map((o,i)=>el("option",{value:i,text:o}))));
+    if(ans.v[k]!=null && ans.v[k]!=="") s.value=ans.v[k];
+    s.addEventListener("change",()=>{ ans.v=sels.map(x=>x.value); put(ans); ready(sels.every(x=>x.value!=="")); });
+    form.append(el("div",{class:"field"},[el("label",{for:"f"+k,text:lab}),s]));
+    return s;
+  });
+  body.append(form);
+  function go(){ if(IV){clearInterval(IV);IV=null} msg.remove(); t.remove(); hide.remove(); form.hidden=false; body.querySelector(".q").textContent="Попълнете бележката по памет"; ans.hidden=true; put(ans); ready(sels.every(x=>x.value!=="")); }
+  hide.addEventListener("click",go);
+  if(ans.hidden) go(); else IV=setInterval(()=>{ left--; t.textContent=left+" с"; if(left<=0) go() },1000);
+  return ()=>{
+    let ok=0; sels.forEach((s,k)=>{ s.disabled=true; if(s.value!==""&&+s.value===st.fields[k][2]){ok++;s.classList.add("right")} else { s.classList.add("wrong"); s.after(el("p",{class:"small",text:"Вярно: "+st.fields[k][1][st.fields[k][2]]})) } });
+    body.append(el("div",{class:"msg",text:st.text}));
+    return Math.round(10*ok/st.fields.length);
+  };
+}
+
+function spot(st, body, ready, A, put){
+  body.append(el("h2",{class:"q",text:st.q}));
+  const mail=el("div",{class:"mail"}); const toks=[];
+  const pressed=()=>toks.map((x,k)=>x.b.getAttribute("aria-pressed")==="true"?k:-1).filter(k=>k>=0);
+  st.toks.forEach(([t,err,why])=>{
+    if(t==="\n"){ mail.append(el("br")); return }
+    const b=el("button",{class:"tok","aria-pressed":"false",text:t,onclick:e=>{
+      const p=e.currentTarget.getAttribute("aria-pressed")==="true"; e.currentTarget.setAttribute("aria-pressed",String(!p));
+      const on=pressed(); put(on); ready(on.length>0);
+    }});
+    toks.push({b,err,why}); mail.append(b," ");
+  });
+  body.append(mail, el("p",{class:"small",text:"Докоснете всяка част, която смятате за грешка. Внимание: не всичко е грешно."}));
+  if(Array.isArray(A)){ A.forEach(k=>toks[k]&&toks[k].b.setAttribute("aria-pressed","true")); ready(A.length>0); }
+  return ()=>{
+    const errs=toks.filter(x=>x.err).length; let hit=0, fals=0;
+    const ul=el("ul",{class:"list"});
+    toks.forEach(x=>{ const on=x.b.getAttribute("aria-pressed")==="true"; x.b.disabled=true;
+      if(x.err&&on){hit++;x.b.classList.add("hit")} else if(x.err){x.b.classList.add("miss")} else if(on){fals++;x.b.classList.add("false")}
+      if(x.err) ul.append(el("li",{text:`${x.b.textContent} – ${x.why}`}));
+    });
+    body.append(el("p",{class:"who",text:`Намерихте ${hit} от ${errs} грешки${fals?`, ${fals} правилни части отбелязахте като грешни`:""}.`}), ul);
+    return Math.max(0,Math.round(10*(hit-fals)/errs));
+  };
+}
+
+function match(st, body, ready, A, put){
+  body.append(el("h2",{class:"q",text:st.q}));
+  const v=Array.isArray(A)?A:[];
+  const sels=st.rows.map(([t],k)=>{
+    const s=el("select",{id:"m"+k},[el("option",{value:"",text:"– вид документ –"})].concat(st.choices.map((c,i)=>el("option",{value:i,text:c}))));
+    if(v[k]!=null && v[k]!=="") s.value=v[k];
+    s.addEventListener("change",()=>{ put(sels.map(x=>x.value)); ready(sels.every(x=>x.value!=="")); });
+    body.append(el("div",{class:"field"},[el("label",{for:"m"+k,text:t}),s]));
+    return s;
+  });
+  ready(sels.every(x=>x.value!==""));
+  return ()=>{
+    let ok=0; sels.forEach((s,k)=>{ s.disabled=true; const a=st.rows[k][1]; if(s.value!==""&&+s.value===a){ok++;s.classList.add("right")} else { s.classList.add("wrong"); s.after(el("p",{class:"small",text:"Вярно: "+st.choices[a]})) } });
+    return Math.round(10*ok/st.rows.length);
+  };
+}
+
+function write(st, body, ready, A, put){
+  body.append(el("h2",{class:"q",text:st.q}), el("p",{class:"note",text:st.note}));
+  const v=Array.isArray(A)?A:[];
+  const ok=()=>tas.every(x=>x.value.trim().length>3);
+  const tas=st.fields.map(([lab,ph],k)=>{
+    const ta=el("textarea",{id:"w"+k,placeholder:ph});
+    if(v[k]) ta.value=v[k];
+    ta.addEventListener("input",()=>{ put(tas.map(x=>x.value)); ready(ok()); });
+    body.append(el("div",{class:"field"},[el("label",{for:"w"+k,text:lab}),ta]));
+    return ta;
+  });
+  ready(ok());
+  return ()=>{
+    const txt=tas.map(t=>t.value.trim()).join(" ");
+    tas.forEach(t=>t.disabled=true);
+    S.intro=txt; save();
+    body.append(el("p",{class:"who",text:"Вашият отговор:"}), el("div",{class:"msg",text:txt}));
+    return 10;
+  };
+}
+
+function finish(){
+  const sc=total(), pct=sc/MAX;
+  const verdict = pct>=0.85?"Отличен втори работен ден!":pct>=0.6?"Добър втори работен ден!":"Добро начало – прегледайте задачите още веднъж.";
+  const d=new Date(); const date=String(d.getDate()).padStart(2,"0")+"."+String(d.getMonth()+1).padStart(2,"0")+"."+d.getFullYear()+" г.";
+  app.append(el("section",{class:"sheet cert"},[
+    el("p",{class:"who",text:"Курс „Административни и офис дейности“ · с. Чепинци"}),
+    el("h1",{text:"Удостоверение"}),
+    el("p",{text:"за успешно изкаран втори работен ден"}),
+    el("p",{class:"name",text:S.name}),
+    el("p",{class:"score",text:`${sc} / ${MAX}`}),
+    el("p",{text:verdict}),
+    el("div",{class:"stamp",text:"ПРИЕТО"}),
+    el("p",{class:"small",text:date})
+  ]));
+  if(S.intro) app.append(el("section",{class:"sheet"},[el("h2",{class:"q",text:"Вашият отговор за интервю"}),el("div",{class:"msg",text:S.intro}),el("p",{class:"small",text:"Препишете го в тетрадката си."})]));
+  app.append(el("section",{class:"sheet"},[
+    el("p",{text:"Покажете този екран на лектора."}),
+    el("div",{class:"actions"},[backBtn(), el("button",{class:"btn ghost",text:"Започни отначало",onclick:()=>{ if(confirm("Да изтрием ли резултата и да започнем отначало?")){ S={name:S.name,t:-1,s:0,scores:{},ans:{}}; save(); render(); } }})])
+  ]));
+}
+
+render();
+</script>
+</body>
+</html>
