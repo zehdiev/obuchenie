@@ -274,7 +274,8 @@ const TASKS = [
 
 const KEY="den4-praktika-v1";
 const MAX = TASKS.reduce((n,t)=>n+t.steps.length*10,0);
-let S = load() || {name:"", t:-1, s:0, scores:{}};
+let S = load() || {name:"", t:-1, s:0, scores:{}, ans:{}};
+if(!S.ans) S.ans={};
 const app = document.getElementById("app");
 
 function load(){ try{ const v=localStorage.getItem(KEY); return v?JSON.parse(v):null }catch(e){ return null } }
@@ -375,6 +376,9 @@ function taskDone(task){
 
 function step(task, st){
   const key=S.t+"-"+S.s;
+  S.ans=S.ans||{};
+  const put=v=>{ S.ans[key]=v; save(); };
+  const A=S.ans[key];
   const box=el("section",{class:"sheet"});
   box.append(el("p",{class:"who",text:`${task.time} · ${task.title} · стъпка ${S.s+1} от ${task.steps.length}`}));
   if(st.who) box.append(el("p",{class:"who",text:st.who}));
@@ -386,42 +390,51 @@ function step(task, st){
   box.append(acts); app.append(box);
   next.addEventListener("click",nextStep);
   const ready=v=>{ if(v) check.removeAttribute("disabled"); else check.setAttribute("disabled","") };
-  const R={mc,order,memory,spot,match,write}[st.type](st, body, ready, check);
-  check.addEventListener("click",()=>{
+  const R={mc,order,memory,spot,match,write}[st.type](st, body, ready, A, put, key in S.scores);
+  function doCheck(focus){
     const sc=R(); S.scores[key]=sc; save(); header();
     check.hidden=true; next.hidden=false;
     box.insertBefore(feedback(sc, st.why||st.done||""), acts);
-    next.focus();
-  });
+    if(focus) next.focus();
+  }
+  check.addEventListener("click",()=>doCheck(true));
+  if(key in S.scores && A!=null) doCheck(false);
 }
 
-function mc(st, body, ready){
+function mc(st, body, ready, A, put){
   body.append(el("h2",{class:"q",text:st.q}));
   let pick=-1; const order=shuffle(st.opts);
-  const btns=order.map(([t,i])=>el("button",{class:"opt","aria-pressed":"false",text:t,onclick:e=>{
-    pick=i; btns.forEach(b=>b.setAttribute("aria-pressed","false")); e.currentTarget.setAttribute("aria-pressed","true"); ready(true);
-  }}));
+  const choose=(b,i)=>{ pick=i; btns.forEach(x=>x.setAttribute("aria-pressed","false")); b.setAttribute("aria-pressed","true"); ready(true); };
+  const btns=order.map(([t,i])=>el("button",{class:"opt","aria-pressed":"false",text:t,onclick:e=>{ choose(e.currentTarget,i); put(i); }}));
   btns.forEach((b,k)=>b.dataset.i=order[k][1]);
   body.append(el("div",{class:"opts"},btns));
+  if(A!=null){ const b=btns.find(x=>+x.dataset.i===A); if(b) choose(b,A); }
   return ()=>{
     btns.forEach(b=>{ b.disabled=true; const i=+b.dataset.i; if(i===st.a) b.classList.add("right"); else if(i===pick) b.classList.add("wrong") });
     return pick===st.a?10:0;
   };
 }
 
-function order(st, body, ready){
+function order(st, body, ready, A, put){
   body.append(el("h2",{class:"q",text:st.q}));
   const seq=el("div",{class:"seq"}), pool=el("div",{class:"pool"});
   const chosen=[];
-  const mk=(text,i)=>el("button",{class:"chip",onclick:e=>{
-    const b=e.currentTarget;
-    if(b.parentNode===pool){ seq.append(b); chosen.push(i) } else { pool.append(b); chosen.splice(chosen.indexOf(i),1) }
+  const refresh=()=>{
     [...seq.children].forEach((c,k)=>c.querySelector("b").textContent=k+1);
     [...pool.children].forEach(c=>c.querySelector("b").textContent="");
     ready(chosen.length===st.items.length);
-  }},[el("b"),el("span",{text:text})]);
-  shuffle(st.items).forEach(([t,i])=>{ const c=mk(t,i); c.dataset.i=i; pool.append(c) });
+  };
+  const move=(b,i)=>{
+    if(b.parentNode===pool){ seq.append(b); chosen.push(i) } else { pool.append(b); chosen.splice(chosen.indexOf(i),1) }
+    refresh();
+  };
+  const chips={};
+  shuffle(st.items).forEach(([t,i])=>{
+    const c=el("button",{class:"chip",onclick:e=>{ move(e.currentTarget,i); put(chosen.slice()); }},[el("b"),el("span",{text:t})]);
+    c.dataset.i=i; chips[i]=c; pool.append(c);
+  });
   body.append(seq,pool);
+  if(Array.isArray(A)) A.forEach(i=>{ if(chips[i]) move(chips[i],i) });
   return ()=>{
     let ok=0; [...seq.children].forEach((c,k)=>{ c.disabled=true; if(+c.dataset.i===k){ok++;c.classList.add("right")} else c.classList.add("wrong") });
     if(ok<st.items.length){
@@ -431,7 +444,8 @@ function order(st, body, ready){
   };
 }
 
-function memory(st, body, ready, check){
+function memory(st, body, ready, A, put){
+  const ans=Object.assign({hidden:false,v:[]},A||{});
   body.append(el("h2",{class:"q",text:"Прочетете съобщението"}));
   const msg=el("div",{class:"msg",text:st.text});
   let left=st.seconds; const t=el("div",{class:"timer",text:left+" с"});
@@ -440,33 +454,36 @@ function memory(st, body, ready, check){
   const form=el("div",{hidden:""});
   const sels=st.fields.map(([lab,opts],k)=>{
     const s=el("select",{id:"f"+k},[el("option",{value:"",text:"– изберете –"})].concat(opts.map((o,i)=>el("option",{value:i,text:o}))));
-    s.addEventListener("change",()=>ready(sels.every(x=>x.value!=="")));
+    if(ans.v[k]!=null && ans.v[k]!=="") s.value=ans.v[k];
+    s.addEventListener("change",()=>{ ans.v=sels.map(x=>x.value); put(ans); ready(sels.every(x=>x.value!=="")); });
     form.append(el("div",{class:"field"},[el("label",{for:"f"+k,text:lab}),s]));
     return s;
   });
   body.append(form);
-  IV=setInterval(()=>{ left--; t.textContent=left+" с"; if(left<=0) go() },1000);
-  function go(){ clearInterval(IV); IV=null; msg.remove(); t.remove(); hide.remove(); form.hidden=false; body.querySelector(".q").textContent="Попълнете бележката по памет"; }
+  function go(){ if(IV){clearInterval(IV);IV=null} msg.remove(); t.remove(); hide.remove(); form.hidden=false; body.querySelector(".q").textContent="Попълнете бележката по памет"; ans.hidden=true; put(ans); ready(sels.every(x=>x.value!=="")); }
   hide.addEventListener("click",go);
+  if(ans.hidden) go(); else IV=setInterval(()=>{ left--; t.textContent=left+" с"; if(left<=0) go() },1000);
   return ()=>{
-    let ok=0; sels.forEach((s,k)=>{ s.disabled=true; if(+s.value===st.fields[k][2]){ok++;s.classList.add("right")} else { s.classList.add("wrong"); s.after(el("p",{class:"small",text:"Вярно: "+st.fields[k][1][st.fields[k][2]]})) } });
+    let ok=0; sels.forEach((s,k)=>{ s.disabled=true; if(s.value!==""&&+s.value===st.fields[k][2]){ok++;s.classList.add("right")} else { s.classList.add("wrong"); s.after(el("p",{class:"small",text:"Вярно: "+st.fields[k][1][st.fields[k][2]]})) } });
     body.append(el("div",{class:"msg",text:st.text}));
     return Math.round(10*ok/st.fields.length);
   };
 }
 
-function spot(st, body, ready){
+function spot(st, body, ready, A, put){
   body.append(el("h2",{class:"q",text:st.q}));
   const mail=el("div",{class:"mail"}); const toks=[];
+  const pressed=()=>toks.map((x,k)=>x.b.getAttribute("aria-pressed")==="true"?k:-1).filter(k=>k>=0);
   st.toks.forEach(([t,err,why])=>{
     if(t==="\n"){ mail.append(el("br")); return }
     const b=el("button",{class:"tok","aria-pressed":"false",text:t,onclick:e=>{
       const p=e.currentTarget.getAttribute("aria-pressed")==="true"; e.currentTarget.setAttribute("aria-pressed",String(!p));
-      ready(toks.some(x=>x.b.getAttribute("aria-pressed")==="true"));
+      const on=pressed(); put(on); ready(on.length>0);
     }});
     toks.push({b,err,why}); mail.append(b," ");
   });
   body.append(mail, el("p",{class:"small",text:"Докоснете всяка част, която смятате за грешка. Внимание: не всичко е грешно."}));
+  if(Array.isArray(A)){ A.forEach(k=>toks[k]&&toks[k].b.setAttribute("aria-pressed","true")); ready(A.length>0); }
   return ()=>{
     const errs=toks.filter(x=>x.err).length; let hit=0, fals=0;
     const ul=el("ul",{class:"list"});
@@ -479,28 +496,35 @@ function spot(st, body, ready){
   };
 }
 
-function match(st, body, ready){
+function match(st, body, ready, A, put){
   body.append(el("h2",{class:"q",text:st.q}));
+  const v=Array.isArray(A)?A:[];
   const sels=st.rows.map(([t],k)=>{
     const s=el("select",{id:"m"+k},[el("option",{value:"",text:"– вид документ –"})].concat(st.choices.map((c,i)=>el("option",{value:i,text:c}))));
-    s.addEventListener("change",()=>ready(sels.every(x=>x.value!=="")));
+    if(v[k]!=null && v[k]!=="") s.value=v[k];
+    s.addEventListener("change",()=>{ put(sels.map(x=>x.value)); ready(sels.every(x=>x.value!=="")); });
     body.append(el("div",{class:"field"},[el("label",{for:"m"+k,text:t}),s]));
     return s;
   });
+  ready(sels.every(x=>x.value!==""));
   return ()=>{
-    let ok=0; sels.forEach((s,k)=>{ s.disabled=true; const a=st.rows[k][1]; if(+s.value===a){ok++;s.classList.add("right")} else { s.classList.add("wrong"); s.after(el("p",{class:"small",text:"Вярно: "+st.choices[a]})) } });
+    let ok=0; sels.forEach((s,k)=>{ s.disabled=true; const a=st.rows[k][1]; if(s.value!==""&&+s.value===a){ok++;s.classList.add("right")} else { s.classList.add("wrong"); s.after(el("p",{class:"small",text:"Вярно: "+st.choices[a]})) } });
     return Math.round(10*ok/st.rows.length);
   };
 }
 
-function write(st, body, ready){
+function write(st, body, ready, A, put){
   body.append(el("h2",{class:"q",text:st.q}), el("p",{class:"note",text:st.note}));
+  const v=Array.isArray(A)?A:[];
+  const ok=()=>tas.every(x=>x.value.trim().length>3);
   const tas=st.fields.map(([lab,ph],k)=>{
     const ta=el("textarea",{id:"w"+k,placeholder:ph});
-    ta.addEventListener("input",()=>ready(tas.every(x=>x.value.trim().length>3)));
+    if(v[k]) ta.value=v[k];
+    ta.addEventListener("input",()=>{ put(tas.map(x=>x.value)); ready(ok()); });
     body.append(el("div",{class:"field"},[el("label",{for:"w"+k,text:lab}),ta]));
     return ta;
   });
+  ready(ok());
   return ()=>{
     const txt=tas.map(t=>t.value.trim()).join(" ");
     tas.forEach(t=>t.disabled=true);
@@ -527,7 +551,7 @@ function finish(){
   if(S.intro) app.append(el("section",{class:"sheet"},[el("h2",{class:"q",text:"Вашето представяне за интервю"}),el("div",{class:"msg",text:S.intro}),el("p",{class:"small",text:"Препишете го в тетрадката си."})]));
   app.append(el("section",{class:"sheet"},[
     el("p",{text:"Покажете този екран на лектора."}),
-    el("div",{class:"actions"},[backBtn(), el("button",{class:"btn ghost",text:"Започни отначало",onclick:()=>{ if(confirm("Да изтрием ли резултата и да започнем отначало?")){ S={name:S.name,t:-1,s:0,scores:{}}; save(); render(); } }})])
+    el("div",{class:"actions"},[backBtn(), el("button",{class:"btn ghost",text:"Започни отначало",onclick:()=>{ if(confirm("Да изтрием ли резултата и да започнем отначало?")){ S={name:S.name,t:-1,s:0,scores:{},ans:{}}; save(); render(); } }})])
   ]));
 }
 
