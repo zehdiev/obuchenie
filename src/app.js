@@ -347,13 +347,13 @@ document.addEventListener('visibilitychange',function(){if(document.visibilitySt
 
 /* ---------- settings / login ---------- */
 /* ---------- settings / login ---------- */
-function openModal(html){$('#modalBox').innerHTML=html;$('#modal').classList.add('open');var f=$('#modalBox input');if(f)f.focus();}
-function closeModal(){$('#modal').classList.remove('open');}
+function openModal(html){$('#modalBox').innerHTML=html;var md=$('#modal');md.classList.add('open');md.scrollTop=0;document.documentElement.classList.add('modalopen');}
+function closeModal(){$('#modal').classList.remove('open');document.documentElement.classList.remove('modalopen');}
 function settings(){
-  var h='<h2>Настройки</h2><label class="field" for="nm">Вашето име<input id="nm" value="'+esc(S.name)+'" autocomplete="name"></label><div class="row"><button class="btn primary" data-act="savename">Запази</button></div><hr style="border:0;border-top:1px solid var(--line);width:100%">';
+  var h='<div class="row" style="justify-content:space-between"><h2>Настройки</h2><button class="btn ghost" data-act="close" aria-label="Затвори" style="font-size:1.3rem">✕</button></div><label class="field" for="nm">Вашето име<input id="nm" value="'+esc(S.name)+'" autocomplete="name"></label><div class="row"><button class="btn primary" data-act="savename">Запази</button></div><hr style="border:0;border-top:1px solid var(--line);width:100%">';
   if(teacher)h+='<p style="margin:0">Влезли сте в <b>режим учител</b>.</p><div class="row"><button class="btn stamp" data-act="logout">Изход от режим учител</button></div>';
   else h+='<h3>Режим учител</h3><form id="login" class="stack" style="gap:10px"><label class="field" for="lu">Потребител<input id="lu" autocomplete="username"></label><label class="field" for="lp">Парола<input id="lp" type="password" autocomplete="current-password"></label><div class="err" id="lerr"></div><button class="btn stamp" type="submit">Вход</button></form>';
-  h+='<hr style="border:0;border-top:1px solid var(--line);width:100%"><h3>Екранът да остане включен</h3><label class="row" style="gap:8px"><input type="checkbox" id="wakeChk"'+(wake?' checked':'')+'> Не изгасвай екрана, докато учебникът е отворен</label><div class="muted" id="wakeState" style="font-size:.85rem"></div>';
+  h+='<hr style="border:0;border-top:1px solid var(--line);width:100%"><h3>Екранът да остане включен</h3><label style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" id="wakeChk" style="margin-top:5px;width:20px;height:20px;flex:none"'+(wake?' checked':'')+'> Не изгасвай екрана, докато учебникът е отворен</label><div class="muted" id="wakeState" style="font-size:.85rem"></div>';
   h+='<hr style="border:0;border-top:1px solid var(--line);width:100%"><h3>Инсталиране на телефона</h3>'+installHTML();
   h+='<hr style="border:0;border-top:1px solid var(--line);width:100%"><div class="row" style="justify-content:space-between"><button class="btn" data-act="reset">Изтрий моя напредък</button><button class="btn ghost" data-act="close">Затвори</button></div>';
   openModal(h);updWake();

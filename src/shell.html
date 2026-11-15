@@ -309,6 +309,9 @@ body.proj .view{padding:8px}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#1f2a35;color:#fff;padding:12px 16px;border-radius:10px;z-index:70;max-width:92vw;box-shadow:var(--shadow);font-size:.92rem}
 .navback{display:none}
 @media (max-width:860px){body.navopen .navback{display:block;position:fixed;inset:0;background:rgba(20,28,36,.45);z-index:25}body.navopen{overflow:hidden}}
+.modal{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;align-items:flex-start;padding:24px 14px}
+.modal .box{margin:auto;max-width:440px}
+html.modalopen,html.modalopen body{overflow:hidden;overscroll-behavior:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{.side,.top,.no-print{display:none!important}.app{display:block}}
 </style>
