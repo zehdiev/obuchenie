@@ -502,7 +502,7 @@ if('serviceWorker' in navigator&&!inFrame&&(location.protocol==='https:'||locati
     reg.addEventListener('updatefound',function(){var w=reg.installing;if(!w||firstSW)return;w.addEventListener('statechange',function(){if(w.state==='activated')toast('Има нова версия на учебника. Ще се зареди при следващото отваряне.');});});
   }).catch(function(){});}
 function toast(t){var d=document.createElement('div');d.className='toast';d.setAttribute('role','status');d.textContent=t;document.body.appendChild(d);setTimeout(function(){d.remove();},6000);}
-function netState(){var o=navigator.onLine===false;document.body.classList.toggle('offline',o);var p=document.getElementById('offpill');if(p)p.hidden=!o;}
+function netState(){document.body.classList.toggle('offline',navigator.onLine===false);}
 window.addEventListener('online',netState);window.addEventListener('offline',netState);
 route();netState();
 (function(){var ua=navigator.userAgent||'';var ios=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);

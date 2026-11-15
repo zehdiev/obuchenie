@@ -14,7 +14,7 @@ pwa=out.replace('<!--MANIFEST-->','<link rel="manifest" href="manifest.webmanife
 open('pwa/index.html','w').write(pwa)
 json.dump({"name":"Учебник – Административни и офис дейности","short_name":"Учебник АОД","start_url":"./index.html","scope":"./","display":"standalone","background_color":"#f6f7f5","theme_color":"#1f5e78","lang":"bg","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]},open('pwa/manifest.webmanifest','w'),ensure_ascii=False,indent=1)
 open('pwa/sw.js','w').write(r"""// Учебник АОД – работа без интернет
-const C='aod-v6';
+const C='aod-v7';
 const CORE=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 const FONTS='https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap';
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(async c=>{await c.addAll(CORE);try{const r=await fetch(FONTS,{mode:'cors'});if(r.ok)await c.put(FONTS,r);}catch(_){}}));self.skipWaiting();});
