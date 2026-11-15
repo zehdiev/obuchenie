@@ -1,7 +1,8 @@
 (function(){
 'use strict';
 var KEY='aod26', TKEY='aod26_teacher';
-var BYID={}; MODS.forEach(function(m,i){m.idx=i;BYID[m.id]=m;});
+var BYID={}; MODS.forEach(function(m,i){m.idx=i;BYID[m.id]=m;m.days=[];});
+SCHED.forEach(function(d){d[2].forEach(function(x){var m=BYID[x[0]];if(m&&m.days.indexOf(d[0])<0)m.days.push(d[0]);});});
 var SECS=[['А1','Обща професионална подготовка'],['А2','Отраслова професионална подготовка'],['А3','Специфична професионална подготовка'],['Б','Разширена подготовка (избираема)'],['Пр','Производствена практика'],['Из','Изпит']];
 var WD=['неделя','понеделник','вторник','сряда','четвъртък','петък','събота'];
 var MON=['януари','февруари','март','април','май','юни','юли','август','септември','октомври','ноември','декември'];
@@ -67,7 +68,7 @@ function vHome(){
   h+='<div><h1>Добре дошли'+name+'!</h1><p class="muted" style="margin:.3em 0 0">Квалификационен курс по професия „Административни и офис дейности“, първа степен. Тук са уроците, упражненията и тестовете по учебната програма.</p></div>';
   h+='<div class="hero">'+card+'<div class="card stack" style="gap:12px"><h3>Моят напредък</h3><div class="stat"><b>'+tp+'%</b><span>от курса</span></div><div class="bar"><i style="width:'+tp+'%"></i></div><p class="muted" style="font-size:.85rem;margin:0">Напредъкът се пази само в този браузър. '+(S.name?'':'<a href="#" data-act="settings">Въведете името си</a>.')+'</p></div></div>';
   if(!standalone)h+='<div class="card row" style="justify-content:space-between"><div><b>Инсталирайте учебника на телефона</b><br><span class="muted" style="font-size:.88rem">Отваря се с едно докосване от началния екран.</span></div><button class="btn primary" data-act="settings">Как да инсталирам</button></div>';
-  h+='<div class="card"><div class="stats"><div class="stat"><b>300</b><span>учебни часа</span></div><div class="stat"><b>96</b><span>часа теория</span></div><div class="stat"><b>204</b><span>часа практика</span></div></div><p class="muted" style="margin:12px 0 0;font-size:.88rem">Период: 10.11.2026 – 13.01.2027 · Място: с. Чепинци, общ. Рудозем · Завършване: държавен изпит и свидетелство за професионална квалификация</p></div>';
+  h+='<div class="card"><div class="stats"><div class="stat"><b>300</b><span>учебни часа</span></div><div class="stat"><b>96</b><span>часа теория</span></div><div class="stat"><b>204</b><span>часа практика</span></div></div><p class="muted" style="margin:12px 0 0;font-size:.88rem">Период: 09.11.2026 – 13.01.2027 · Място: с. Чепинци, общ. Рудозем · Завършване: държавен изпит и свидетелство за професионална квалификация</p></div>';
   SECS.forEach(function(s){var ms=MODS.filter(function(m){return m.sec===s[0];});
     h+='<div class="stack" style="gap:10px"><h2 style="font-size:1.15rem">'+s[0]+' · '+s[1]+'</h2><div class="grid">';
     ms.forEach(function(m){var p=modProgress(m),st=dayStatus(m.days[m.days.length-1]),sd=dayStatus(m.days[0]);
@@ -473,6 +474,9 @@ $('#wakeBtn').addEventListener('click',function(){setWake(!wake);});
 document.addEventListener('fullscreenchange',function(){if(!document.fullscreenElement)document.body.classList.remove('proj');});
 $('#settingsBtn').addEventListener('click',settings);
 $('#menuBtn').addEventListener('click',function(){document.body.classList.toggle('navopen');});
+$('#navback').addEventListener('click',function(){document.body.classList.remove('navopen');});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')document.body.classList.remove('navopen');});
+(function(){var sx=null;var side=$('#side');side.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;},{passive:true});side.addEventListener('touchend',function(e){if(sx!==null&&e.changedTouches[0].clientX-sx<-60)document.body.classList.remove('navopen');sx=null;},{passive:true});})();
 $('#modal').addEventListener('click',function(e){if(e.target.id==='modal')closeModal();});
 document.addEventListener('submit',function(e){
   var f=e.target; e.preventDefault();
@@ -491,8 +495,16 @@ document.addEventListener('input',function(e){
   else if(t.id==='gls'){var q=t.value.trim().toLowerCase();document.querySelectorAll('#gll [data-s]').forEach(function(x){x.style.display=!q||x.dataset.s.indexOf(q)>=0?'':'none';});}
 });
 document.addEventListener('change',function(e){var t=e.target;if(t.id==='wakeChk')setWake(t.checked);else if(t.classList.contains('psel'))t.classList.remove('right','wrong');});
-if('serviceWorker' in navigator&&!inFrame&&location.protocol==='https:'&&document.querySelector('link[rel=manifest]')){navigator.serviceWorker.register('sw.js').catch(function(){});}
-route();
+if('serviceWorker' in navigator&&!inFrame&&(location.protocol==='https:'||location.hostname==='localhost')&&document.querySelector('link[rel=manifest]')){
+  var firstSW=!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js').then(function(reg){
+    navigator.serviceWorker.ready.then(function(){if(firstSW)toast('Учебникът е записан на телефона и вече работи и без интернет.');});
+    reg.addEventListener('updatefound',function(){var w=reg.installing;if(!w||firstSW)return;w.addEventListener('statechange',function(){if(w.state==='activated')toast('Има нова версия на учебника. Ще се зареди при следващото отваряне.');});});
+  }).catch(function(){});}
+function toast(t){var d=document.createElement('div');d.className='toast';d.setAttribute('role','status');d.textContent=t;document.body.appendChild(d);setTimeout(function(){d.remove();},6000);}
+function netState(){var o=navigator.onLine===false;document.body.classList.toggle('offline',o);var p=document.getElementById('offpill');if(p)p.hidden=!o;}
+window.addEventListener('online',netState);window.addEventListener('offline',netState);
+route();netState();
 (function(){var ua=navigator.userAgent||'';var ios=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
   if(ios&&!standalone&&!inFrame&&/^https:$/.test(location.protocol))setTimeout(function(){showInstallBar(true);},1500);})();
 })();

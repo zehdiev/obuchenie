@@ -306,6 +306,9 @@ body.proj .view{padding:8px}
 .chromebar .btn.primary{background:#b5501f;border-color:#b5501f;color:#fff}
 .chromebar .btn.ghost{background:transparent;color:#d5dbe0}
 .chromebar .muted{color:#b9c2ca}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#1f2a35;color:#fff;padding:12px 16px;border-radius:10px;z-index:70;max-width:92vw;box-shadow:var(--shadow);font-size:.92rem}
+.navback{display:none}
+@media (max-width:860px){body.navopen .navback{display:block;position:fixed;inset:0;background:rgba(20,28,36,.45);z-index:25}body.navopen{overflow:hidden}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{.side,.top,.no-print{display:none!important}.app{display:block}}
 </style>
@@ -313,11 +316,13 @@ body.proj .view{padding:8px}
 <body>
 <div class="app">
   <aside class="side" id="side" aria-label="Съдържание"></aside>
+  <div class="navback" id="navback" aria-hidden="true"></div>
   <div class="main">
     <header class="top">
       <button class="btn ghost menu" id="menuBtn" aria-label="Меню">☰</button>
       <button class="btn" id="backBtn" aria-label="Назад" hidden>← Назад</button>
       <div class="crumbs" id="crumbs"></div>
+      <span class="pill warn" id="offpill" hidden>Без интернет</span>
       <span class="tbadge teacher-inline">Учител</span>
       <a class="btn hide-sm" href="#schedule">График</a>
       <a class="btn hide-sm" href="#glossary">Речник</a>
