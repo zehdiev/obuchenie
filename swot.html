@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Моят SWOT анализ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: one column, phone first; step tabs on top, chips in the middle, sticky nav at the bottom. */
+:root{
+  --bg:#f3f5f4; --surface:#ffffff; --ink:#18232b; --muted:#5d6a70; --line:#dbe1df;
+  --accent:#1f4e5f;
+  --s:#2f8a5b; --s-soft:#e2f2e9;
+  --w:#c27a12; --w-soft:#fbefd9;
+  --o:#2d6cb5; --o-soft:#e1ecf8;
+  --t:#c0444f; --t-soft:#f8e3e5;
+  --f-display:"Unbounded", "Arial Black", system-ui, sans-serif;
+  --f-body:"Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11181c; --surface:#1a2328; --ink:#e8eeec; --muted:#9aa8ad; --line:#2c393f;
+    --accent:#7fc2d6;
+    --s:#5cc48e; --s-soft:#183327; --w:#e6a443; --w-soft:#382a14;
+    --o:#6ea7ea; --o-soft:#172a40; --t:#ec7a83; --t-soft:#3a1d21;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11181c; --surface:#1a2328; --ink:#e8eeec; --muted:#9aa8ad; --line:#2c393f;
+  --accent:#7fc2d6;
+  --s:#5cc48e; --s-soft:#183327; --w:#e6a443; --w-soft:#382a14;
+  --o:#6ea7ea; --o-soft:#172a40; --t:#ec7a83; --t-soft:#3a1d21;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.app{max-width:640px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top) + 12px) 16px 0}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:4px 2px 12px}
+h1{font-family:var(--f-display);font-weight:700;font-size:20px;margin:0;letter-spacing:-.01em}
+.hint{color:var(--muted);font-size:13px}
+
+/* tabs */
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:14px}
+.tab{border:0;background:var(--surface);border-radius:12px;padding:8px 2px 7px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;border-bottom:3px solid transparent;min-height:52px}
+.tab .lbl{font-size:11.5px;font-weight:600;color:var(--muted)}
+.tab .cnt{font-family:var(--f-display);font-size:15px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.tab[aria-current="step"]{border-bottom-color:var(--c)}
+.tab[aria-current="step"] .lbl,.tab[aria-current="step"] .cnt{color:var(--c)}
+.tab.done .cnt{color:var(--c)}
+
+/* step header */
+.step-head{background:var(--soft);border-radius:18px;padding:16px 16px 14px;display:flex;gap:14px;align-items:center}
+.letter{flex:none;width:52px;height:52px;border-radius:14px;background:var(--c);color:#fff;font-family:var(--f-display);font-weight:700;font-size:26px;display:grid;place-items:center}
+.step-head h2{font-family:var(--f-display);font-weight:500;font-size:18px;margin:0;text-wrap:balance;line-height:1.25}
+.step-head p{margin:3px 0 0;color:var(--muted);font-size:14px}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:14px 0 6px}
+.chip{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:10px 14px;min-height:44px;cursor:pointer;font-weight:600;font-size:15px;text-align:left;display:inline-flex;align-items:center;gap:8px;transition:background .15s,border-color .15s}
+.chip .mark{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line);flex:none;display:grid;place-items:center;font-size:13px;line-height:1}
+.chip[aria-pressed="true"]{background:var(--soft);border-color:var(--c);color:var(--ink)}
+.chip[aria-pressed="true"] .mark{background:var(--c);border-color:var(--c);color:#fff}
+.chip[aria-pressed="true"] .mark::after{content:"✓"}
+.chip.custom{border-style:dashed}
+.limit{min-height:22px;font-size:13.5px;color:var(--muted)}
+.limit.warn{color:var(--t);font-weight:600}
+
+.add{margin:6px 0 4px}
+.add summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:14px;padding:8px 0;list-style:none}
+.add summary::-webkit-details-marker{display:none}
+.add form{display:flex;gap:8px;margin-top:4px}
+.add input{flex:1;min-width:0;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:10px 12px;font:inherit}
+.btn{border:0;border-radius:14px;padding:12px 18px;min-height:48px;font-weight:700;cursor:pointer;background:var(--surface);border:1.5px solid var(--line)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.btn:disabled{opacity:.4;cursor:default}
+
+/* bottom bar */
+.spacer{flex:1}
+.bar{position:sticky;bottom:0;background:linear-gradient(to bottom, transparent, var(--bg) 18px);padding:22px 0 calc(env(safe-area-inset-bottom) + 14px);display:flex;gap:10px}
+.bar .btn{flex:1}
+.bar .btn.primary{flex:2}
+
+/* result */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.q{background:var(--soft);border-radius:16px;padding:12px;border-top:4px solid var(--c);min-width:0}
+.q h3{margin:0 0 6px;font-family:var(--f-display);font-weight:500;font-size:13.5px;color:var(--c)}
+.q ul{margin:0;padding-left:16px;font-size:13.5px}
+.q li{margin:2px 0;overflow-wrap:anywhere}
+.q .none{color:var(--muted);font-size:13px;font-style:italic}
+.axis{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11.5px;color:var(--muted);text-align:center;margin:0 0 6px;font-weight:600;letter-spacing:.02em;text-transform:uppercase}
+.plan{margin-top:20px}
+.plan > h2{font-family:var(--f-display);font-weight:700;font-size:18px;margin:0 0 4px}
+.plan > p{margin:0 0 12px;color:var(--muted);font-size:14px}
+.block{background:var(--surface);border-radius:16px;padding:14px 14px 6px;margin-bottom:10px;border-left:5px solid var(--c)}
+.block h3{margin:0 0 8px;font-size:15.5px}
+.item{padding:0 0 10px}
+.item b{display:block;font-size:14.5px}
+.item span{color:var(--muted);font-size:14px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+.actions .btn{flex:1 1 140px}
+.toast{min-height:22px;font-size:14px;color:var(--s);font-weight:600;text-align:center}
+.empty{background:var(--surface);border-radius:16px;padding:20px;text-align:center;color:var(--muted)}
+
+[data-k="s"]{--c:var(--s);--soft:var(--s-soft)}
+[data-k="w"]{--c:var(--w);--soft:var(--w-soft)}
+[data-k="o"]{--c:var(--o);--soft:var(--o-soft)}
+[data-k="t"]{--c:var(--t);--soft:var(--t-soft)}
+[data-k="r"]{--c:var(--accent);--soft:var(--surface)}
+
+@media (max-width:380px){
+  .grid,.axis{grid-template-columns:1fr}
+  .axis{display:none}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Моят SWOT</h1>
+    <span class="hint">Само докосвай</span>
+  </header>
+  <nav class="tabs" id="tabs" aria-label="Стъпки"></nav>
+  <main id="main"></main>
+  <div class="spacer"></div>
+  <div class="bar">
+    <button class="btn" id="back" type="button">Назад</button>
+    <button class="btn primary" id="next" type="button">Напред</button>
+  </div>
+</div>
+
+<script>
+const MAX = 6;
+const Q = {
+  s:{letter:"S", name:"Силни страни", short:"Силни", ask:"Какво ти се отдава?", sub:"Твоите умения и качества. Докосни 3–5 неща.", plan:"Покажи силните си страни", generic:"Спомени го в CV-то и на интервю с конкретен пример.",
+    items:[
+      ["Работя добре с компютър","Посочи в CV-то кои програми ползваш: Word, Excel, имейл."],
+      ["Бързо уча нови неща","Разкажи на интервю за нещо ново, което научи бързо."],
+      ["Общувам лесно с хора","Търси работа с клиенти: офис, приемна, магазин, администрация."],
+      ["Спазвам срокове и уговорки","Подчертай го пред работодателя. Това се цени най-много."],
+      ["Работя добре в екип","Разкажи за случай, в който екипът ти постигна нещо заедно."],
+      ["Подреждам и организирам","Подходящо е за офис: документи, архив, графици."],
+      ["Внимавам в детайлите","Ценно е при документи, фактури и въвеждане на данни."],
+      ["Запазвам спокойствие","Подходящо е за работа с клиенти и много задачи наведнъж."],
+      ["Говоря чужд език","Впиши езика и нивото си в CV-то. Това е предимство."],
+      ["Имам шофьорска книжка","Посочи я. Отваря ти работа и извън селото."],
+      ["Имам опит (работа, стаж, доброволчество)","Опиши го конкретно в CV-то: къде, колко време, какво правеше."],
+      ["Имам желание да работя","Покажи го: идвай навреме и задавай въпроси на интервюто."]
+    ]},
+  w:{letter:"W", name:"Слаби страни", short:"Слаби", ask:"Какво искаш да подобриш?", sub:"Няма лошо отговори. Докосни 3–5 неща.", plan:"Подобри слабите страни", generic:"Избери една малка стъпка и я направи тази седмица.",
+    items:[
+      ["Малко трудов опит","Потърси стаж или доброволчество, за да натрупаш опит."],
+      ["Слабо ползвам компютър","Упражнявай Word и Excel по 20 минути на ден."],
+      ["Не говоря чужд език","Започни с безплатно приложение по 10 минути на ден."],
+      ["Притеснявам се на интервю","Упражни интервю с приятел: 5 въпроса, 3 пъти."],
+      ["Отлагам задачите","Започвай с най-малката стъпка и я свърши днес."],
+      ["Трудно организирам времето си","Вечер записвай 3 задачи за следващия ден."],
+      ["Трудно казвам „не“","Упражни учтив отказ: „Сега не мога, но мога в петък.“"],
+      ["Нервя се под напрежение","Когато е напечено, раздели работата на малки части."],
+      ["Нямам CV","Направи CV с помощ от обучителя още тази седмица."],
+      ["Нямам шофьорска книжка","Провери цени и програми за шофьорски курс."],
+      ["Нямам завършено образование","Провери възможностите за вечерно или дистанционно обучение."]
+    ]},
+  o:{letter:"O", name:"Възможности", short:"Възможн.", ask:"Какво може да ти помогне отвън?", sub:"Шансове около теб. Докосни 3–5 неща.", plan:"Възползвай се от възможностите", generic:"Разбери кой е първият контакт и се свържи с него.",
+    items:[
+      ["Курсове и обучения","Завърши обучението докрай и вземи сертификата."],
+      ["Бюро по труда","Регистрирай се и питай за програми и свободни места."],
+      ["Работа в близкия град","Провери обявите там и как се стига дотам."],
+      ["Работа онлайн / от вкъщи","Търси обяви за работа от вкъщи в сайтовете за работа."],
+      ["Стаж или доброволчество","Попитай местни фирми и организации дали приемат стажанти."],
+      ["Местни фирми търсят хора","Занеси CV лично и се представи."],
+      ["Младежки програми","Следи обявите на общината и младежките организации."],
+      ["Безплатни онлайн уроци","Избери един курс и го минавай по малко всеки ден."],
+      ["Помощ от семейство и приятели","Кажи на близките, че търсиш работа. Често така се намира."],
+      ["Европейски програми","Следи сайтовете на общината и на Агенцията по заетостта."],
+      ["Собствен бизнес","Потърси програми за подкрепа на начинаещи предприемачи."]
+    ]},
+  t:{letter:"T", name:"Заплахи", short:"Заплахи", ask:"Какво може да ти попречи?", sub:"Пречки около теб. Докосни 3–5 неща.", plan:"Защити се от заплахите", generic:"Помисли за план Б, ако това се случи.",
+    items:[
+      ["Малко работа наблизо","Разшири търсенето: близкия град и работа онлайн."],
+      ["Слаб транспорт","Провери разписанията и възможност за споделено пътуване."],
+      ["Много кандидати за една работа","Изпъкни с добро CV и подготвено интервю."],
+      ["Искат опит","Натрупай опит чрез стаж или доброволчество."],
+      ["Технологиите се менят бързо","Учи по малко постоянно, дори 15 минути на седмица."],
+      ["Семейни ангажименти","Търси работа на смени, на половин ден или от вкъщи."],
+      ["Няма пари за обучение","Търси безплатни курсове и обучения по програми."],
+      ["Сезонна или несигурна работа","Използвай сезона, за да трупаш опит и препоръки."],
+      ["Здравословни причини","Търси работа според възможностите си и питай за подкрепа."],
+      ["Хората около мен не ме подкрепят","Намери един човек, който вярва в теб, и споделяй напредъка си."]
+    ]}
+};
+const KEYS = ["s","w","o","t"];
+const STORE = "swot-bg-v1";
+
+let state = {step:0, sel:{s:[],w:[],o:[],t:[]}, custom:{s:[],w:[],o:[],t:[]}};
+try{ const raw = localStorage.getItem(STORE); if(raw){ const p = JSON.parse(raw); if(p && p.sel) state = Object.assign(state, p); } }catch(e){}
+function save(){ try{ localStorage.setItem(STORE, JSON.stringify(state)); }catch(e){} }
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function tipFor(k, label){
+  const f = Q[k].items.find(i => i[0] === label);
+  return f ? f[1] : Q[k].generic;
+}
+
+function renderTabs(){
+  const labels = KEYS.map(k => ({k, lbl:Q[k].short, cnt:state.sel[k].length}));
+  labels.push({k:"r", lbl:"План", cnt:"✓"});
+  $("#tabs").innerHTML = labels.map((t,i) =>
+    `<button type="button" class="tab ${t.k!=="r" && t.cnt>0 ? "done":""}" data-k="${t.k}" data-i="${i}" ${i===state.step?'aria-current="step"':''}>
+      <span class="cnt">${t.cnt}</span><span class="lbl">${t.lbl}</span></button>`).join("");
+}
+
+function renderStep(k){
+  const q = Q[k], sel = state.sel[k];
+  const all = q.items.map(i => i[0]).concat(state.custom[k]);
+  const n = sel.length;
+  $("#main").innerHTML = `
+    <section data-k="${k}">
+      <div class="step-head">
+        <div class="letter" aria-hidden="true">${q.letter}</div>
+        <div><h2>${q.ask}</h2><p>${q.name}. ${q.sub}</p></div>
+      </div>
+      <div class="chips" role="group" aria-label="${q.name}">
+        ${all.map((lbl,i) => `<button type="button" class="chip ${i>=q.items.length?"custom":""}" data-lbl="${esc(lbl)}" aria-pressed="${sel.includes(lbl)}"><span class="mark" aria-hidden="true"></span>${esc(lbl)}</button>`).join("")}
+      </div>
+      <div class="limit" id="limit" aria-live="polite">${n ? `Избрани: ${n} от най-много ${MAX}` : ""}</div>
+      <details class="add">
+        <summary>+ Добави свое (по желание)</summary>
+        <form id="addForm"><input id="addInput" maxlength="60" placeholder="Напиши кратко…" aria-label="Добави свое"><button class="btn" type="submit">Добави</button></form>
+      </details>
+    </section>`;
+}
+
+function renderResult(){
+  const total = KEYS.reduce((a,k) => a + state.sel[k].length, 0);
+  if(!total){
+    $("#main").innerHTML = `<div class="empty">Още нищо не е избрано.<br>Започни от „Силни“ и докосни нещата, които важат за теб.</div>`;
+    return;
+  }
+  const quad = k => `<div class="q" data-k="${k}"><h3>${Q[k].letter} · ${Q[k].name}</h3>${
+    state.sel[k].length ? `<ul>${state.sel[k].map(x=>`<li>${esc(x)}</li>`).join("")}</ul>` : `<div class="none">Нищо избрано</div>`}</div>`;
+  const order = ["o","w","t","s"]; // plan order: act, improve, protect, show
+  const blocks = order.filter(k => state.sel[k].length).map(k => {
+    let items = state.sel[k].map((x,i) => {
+      let extra = "";
+      if(k==="o" && state.sel.s.length){ extra = ` Опора: „${esc(state.sel.s[i % state.sel.s.length])}“.`; }
+      return `<div class="item"><b>${esc(x)}</b><span>${esc(tipFor(k,x))}${extra}</span></div>`;
+    }).join("");
+    return `<div class="block" data-k="${k}"><h3>${Q[k].plan}</h3>${items}</div>`;
+  }).join("");
+  $("#main").innerHTML = `
+    <div class="axis" aria-hidden="true"><span>Полезно</span><span>Вредно</span></div>
+    <div class="grid">${quad("s")}${quad("w")}${quad("o")}${quad("t")}</div>
+    <section class="plan">
+      <h2>Твоят план</h2>
+      <p>По една стъпка за всеки избор. Започни с една още тази седмица.</p>
+      ${blocks}
+    </section>
+    <div class="actions">
+      <button class="btn primary" type="button" id="copy">Копирай като текст</button>
+      <button class="btn" type="button" id="reset">Започни отначало</button>
+    </div>
+    <div class="toast" id="toast" aria-live="polite"></div>`;
+}
+
+function render(){
+  renderTabs();
+  if(state.step < 4) renderStep(KEYS[state.step]); else renderResult();
+  $("#back").disabled = state.step === 0;
+  $("#next").textContent = state.step === 3 ? "Виж плана" : state.step === 4 ? "Промени избора" : "Напред";
+  save();
+}
+function go(i){ state.step = i; render(); window.scrollTo({top:0, behavior:"smooth"}); }
+
+document.addEventListener("click", e => {
+  const tab = e.target.closest(".tab");
+  if(tab){ go(+tab.dataset.i); return; }
+  const chip = e.target.closest(".chip");
+  if(chip){
+    const k = KEYS[state.step], lbl = chip.dataset.lbl, sel = state.sel[k];
+    const idx = sel.indexOf(lbl);
+    if(idx >= 0){ sel.splice(idx,1); }
+    else if(sel.length >= MAX){
+      const l = $("#limit"); l.textContent = `Най-много ${MAX}. Махни едно, за да избереш друго.`; l.classList.add("warn"); return;
+    } else sel.push(lbl);
+    chip.setAttribute("aria-pressed", idx < 0);
+    const l = $("#limit"); l.classList.remove("warn"); l.textContent = sel.length ? `Избрани: ${sel.length} от най-много ${MAX}` : "";
+    renderTabs(); save(); return;
+  }
+  if(e.target.id === "copy"){
+    const lines = ["МОЯТ SWOT АНАЛИЗ",""];
+    KEYS.forEach(k => { lines.push(`${Q[k].letter} – ${Q[k].name}:`); (state.sel[k].length?state.sel[k]:["—"]).forEach(x=>lines.push("• "+x)); lines.push(""); });
+    lines.push("ПЛАН");
+    ["o","w","t","s"].forEach(k => state.sel[k].forEach(x => lines.push(`• ${x}: ${tipFor(k,x)}`)));
+    const txt = lines.join("\n"), t = $("#toast");
+    navigator.clipboard.writeText(txt).then(() => { t.style.color=""; t.textContent = "Копирано. Постави го в съобщение или документ."; })
+      .catch(() => { t.style.color="var(--t)"; t.textContent = "Копирането не се получи. Направи снимка на екрана."; });
+    return;
+  }
+  if(e.target.id === "reset"){
+    const t = $("#toast");
+    if(e.target.dataset.confirm){ state = {step:0, sel:{s:[],w:[],o:[],t:[]}, custom:{s:[],w:[],o:[],t:[]}}; go(0); return; }
+    e.target.dataset.confirm = "1"; e.target.textContent = "Сигурен ли си? Докосни пак"; t.textContent = ""; return;
+  }
+});
+document.addEventListener("submit", e => {
+  if(e.target.id !== "addForm") return;
+  e.preventDefault();
+  const k = KEYS[state.step], v = $("#addInput").value.trim();
+  if(!v) return;
+  const exists = Q[k].items.some(i => i[0] === v) || state.custom[k].includes(v);
+  if(!exists) state.custom[k].push(v);
+  if(!state.sel[k].includes(v) && state.sel[k].length < MAX) state.sel[k].push(v);
+  render();
+});
+$("#back").onclick = () => { if(state.step > 0) go(state.step - 1); };
+$("#next").onclick = () => go(state.step === 4 ? 0 : state.step + 1);
+render();
+</script>
+</body>
+</html>
