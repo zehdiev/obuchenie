@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Счетоводител за един ден – практика</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=PT+Sans:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF2F5; --sheet:#FFFFFF; --ink:#16304D; --soft:#4F6378; --line:#CBD5DF;
+  --stamp:#0F6E63; --stamp-soft:#E0F2EF; --note:#FFE27A; --note-ink:#3D3200;
+  --ok:#1E7A4F; --ok-soft:#E1F3EA; --bad:#B3361E; --bad-soft:#FBE6E1;
+  --btn:#16304D; --btn-ink:#FFFFFF; --pick:#DCE8F5;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#111A24; --sheet:#1A2633; --ink:#E7EEF5; --soft:#9FB1C3; --line:#2F4254;
+    --stamp:#5FD3C1; --stamp-soft:#173A36; --note:#5A4C10; --note-ink:#FFF1B8;
+    --ok:#6DD3A0; --ok-soft:#163528; --bad:#FF9A85; --bad-soft:#3D1E18;
+    --btn:#E7EEF5; --btn-ink:#111A24; --pick:#24384D;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111A24; --sheet:#1A2633; --ink:#E7EEF5; --soft:#9FB1C3; --line:#2F4254;
+  --stamp:#5FD3C1; --stamp-soft:#173A36; --note:#5A4C10; --note-ink:#FFF1B8;
+  --ok:#6DD3A0; --ok-soft:#163528; --bad:#FF9A85; --bad-soft:#3D1E18;
+  --btn:#E7EEF5; --btn-ink:#111A24; --pick:#24384D;
+  color-scheme:dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--paper)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"PT Sans",Arial,sans-serif;font-size:18px;line-height:1.5}
+h1,h2,h3{font-family:Rubik,"PT Sans",Arial,sans-serif;line-height:1.15;margin:0}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--stamp);outline-offset:2px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--sheet)}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--sheet);border-bottom:1px solid var(--line)}
+.top-in{max-width:720px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px}
+.clock{font-family:Rubik,Arial,sans-serif;font-weight:800;font-size:22px;letter-spacing:.02em;min-width:64px}
+.bar{flex:1;height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--stamp);width:0;transition:width .4s}
+.pts{font-family:Rubik,Arial,sans-serif;font-weight:700;white-space:nowrap}
+
+main{max-width:720px;margin:0 auto;padding:20px 16px 48px}
+.sheet{background:var(--sheet);border:1px solid var(--line);border-radius:6px;padding:22px 20px;position:relative}
+.sheet + .sheet{margin-top:16px}
+.who{color:var(--soft);font-size:16px;margin:0 0 6px}
+.q{font-family:Rubik,Arial,sans-serif;font-weight:700;font-size:21px;margin:0 0 14px}
+p{margin:0 0 12px}
+.note{white-space:pre-line;background:var(--note);color:var(--note-ink);padding:12px 14px;border-radius:4px;margin:0 0 14px;font-size:17px}
+.quote{border-left:4px solid var(--stamp);padding:6px 0 6px 14px;margin:0 0 14px;font-style:italic}
+
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:block;width:100%;text-align:left;background:var(--sheet);border:2px solid var(--line);border-radius:6px;padding:12px 14px;cursor:pointer;line-height:1.4}
+.opt[aria-pressed="true"]{border-color:var(--stamp);background:var(--pick)}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt:disabled{cursor:default}
+
+.seq{display:flex;flex-direction:column;gap:8px;min-height:48px;margin:0 0 14px;padding:10px;border:2px dashed var(--line);border-radius:6px}
+.seq:empty::before{content:"Докоснете редовете долу в правилния ред";color:var(--soft);font-size:16px}
+.chip{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:var(--sheet);border:2px solid var(--line);border-radius:6px;padding:10px 12px;cursor:pointer;line-height:1.4}
+.chip b{font-family:Rubik,Arial,sans-serif;color:var(--stamp);min-width:22px}
+.chip.right{border-color:var(--ok);background:var(--ok-soft)}
+.chip.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.pool{display:flex;flex-direction:column;gap:8px}
+
+.mail{border:1px solid var(--line);border-radius:6px;padding:16px;background:var(--sheet);line-height:2.1}
+.tok{display:inline;text-align:left;border:none;background:none;padding:2px 4px;border-radius:4px;cursor:pointer;border-bottom:2px dotted var(--soft)}
+.tok[aria-pressed="true"]{background:var(--stamp-soft);border-bottom-color:var(--stamp)}
+.tok.hit{background:var(--ok-soft);border-bottom:2px solid var(--ok)}
+.tok.miss{background:var(--bad-soft);border-bottom:2px solid var(--bad)}
+.tok.false{background:var(--bad-soft);text-decoration:line-through}
+
+.field{margin:0 0 14px}
+.field label{display:block;font-weight:700;margin:0 0 6px}
+select,textarea,input[type=text]{width:100%;font:inherit;color:var(--ink);background:var(--sheet);border:2px solid var(--line);border-radius:6px;padding:10px 12px}
+textarea{min-height:76px;resize:vertical}
+select.right,input.right{border-color:var(--ok);background:var(--ok-soft)}
+select.wrong,input.wrong{border-color:var(--bad);background:var(--bad-soft)}
+
+.msg{background:var(--stamp-soft);border-radius:6px;padding:16px;margin:0 0 12px;font-size:19px}
+.timer{font-family:Rubik,Arial,sans-serif;font-weight:800;font-size:40px;color:var(--stamp)}
+
+.fb{margin-top:16px;padding:14px 16px;border-radius:6px;background:var(--ok-soft);border-left:5px solid var(--ok)}
+.fb.mid{background:var(--note);color:var(--note-ink);border-left-color:#B08A00}
+.fb.low{background:var(--bad-soft);border-left-color:var(--bad)}
+.fb h3{font-size:18px;margin:0 0 4px}
+
+.actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.btn{background:var(--btn);color:var(--btn-ink);border:none;border-radius:6px;padding:14px 22px;font-family:Rubik,Arial,sans-serif;font-weight:700;font-size:18px;cursor:pointer}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.actions .btn.ghost:first-child{margin-right:auto}
+
+.hero h1{font-size:40px;font-weight:800;margin:0 0 12px}
+.hero .lead{font-size:20px;color:var(--soft)}
+.day{display:grid;grid-template-columns:64px 1fr;gap:4px 12px;margin:16px 0 0;padding:0;list-style:none}
+.day li{display:contents}
+.day span{font-family:Rubik,Arial,sans-serif;font-weight:700;color:var(--soft)}
+.day li.done span,.day li.done em{color:var(--ok)}
+.day em{font-style:normal}
+
+.stamp{position:absolute;right:18px;top:16px;transform:rotate(-12deg);border:4px double var(--stamp);color:var(--stamp);font-family:Rubik,Arial,sans-serif;font-weight:800;font-size:20px;padding:4px 10px;border-radius:6px;opacity:.9;animation:thump .35s ease-out}
+@keyframes thump{from{transform:rotate(-12deg) scale(1.8);opacity:0}to{transform:rotate(-12deg) scale(1);opacity:.9}}
+@media (prefers-reduced-motion:reduce){.stamp{animation:none}.bar i{transition:none}}
+
+.cert{text-align:center;padding:36px 20px 40px;border:6px double var(--stamp)}
+.cert h1{font-size:30px;margin:0 0 8px}
+.cert .name{font-family:Rubik,Arial,sans-serif;font-size:32px;font-weight:800;margin:18px 0 6px}
+.cert .score{font-size:56px;font-family:Rubik,Arial,sans-serif;font-weight:800;color:var(--stamp);margin:12px 0 0}
+.cert .stamp{position:static;display:inline-block;margin-top:18px;font-size:22px}
+.list{margin:10px 0 0;padding-left:20px}
+.small{font-size:15px;color:var(--soft)}
+@media (max-width:420px){.hero h1{font-size:32px}.q{font-size:19px}}
+</style>
+</head>
+<body>
+<header class="top" id="top" hidden>
+  <div class="top-in">
+    <div class="clock" id="clock">08:30</div>
+    <div class="bar" aria-hidden="true"><i id="barfill"></i></div>
+    <div class="pts" id="pts">0 точки</div>
+  </div>
+</header>
+<main id="app"></main>
+
+<script>
+const TASKS = [
+ {time:"08:30", title:"Балансът на баничарницата", intro:"Днес сте счетоводител на баничарница „Родопска закуска“. Започваме с баланса на 1 ноември.", steps:[
+  {type:"match", q:"Към коя страна на баланса е всеки ред?", choices:["Имущество (активи)","Откъде е дошло (пасиви)"], rows:[
+    ["Фурна и оборудване – 3000 €",0],["Собствен капитал – 4500 €",1],["Пари в касата – 600 €",0],["Кредит от банката – 1000 €",1],["Продукти: брашно, сирене – 400 €",0],["Дължим на доставчици – 500 €",1],["Пари в банката – 2000 €",0]],
+   why:"Отляво – какво има фирмата. Отдясно – чии са парите, с които го е купила."},
+  {type:"num", q:"Сметнете двете страни на баланса", note:"Използвайте числата от предишната стъпка. Може с калкулатора на телефона.", fields:[
+    ["Общо имущество (€)",6000],["Общо пасиви (€)",6000]],
+   why:"3000 + 400 + 600 + 2000 = 6000 €. 4500 + 1000 + 500 = 6000 €. Двете страни винаги са равни."}
+ ]},
+ {time:"09:00", title:"Стопанска операция ли е?", intro:"През деня в баничарницата се случват много неща. Кои от тях записва счетоводителят?", steps:[
+  {type:"match", q:"Стопанска операция ли е?", choices:["Да","Не"], rows:[
+    ["Купува 50 кг брашно и плаща в брой",0],["Звъни на доставчик да пита за цени",1],["Продава 80 баници",0],["Плаща заплата на продавачката",0],["Пренарежда витрината",1],["Получава фактура за тока",0]],
+   why:"Операция е всичко, което променя парите или имуществото. Фактурата за тока създава задължение, дори още да не е платена."},
+  {type:"match", q:"Какво се случва при всяка операция?", choices:["Имущество → друго имущество","Имуществото и задълженията растат","Имуществото и задълженията намаляват"], rows:[
+    ["Купува брашно за 200 € в брой",0],["Плаща на доставчика 500 € по банков път",2],["Взима кредит 1000 € по сметката",1],["Купува витрина за 800 €, ще плати догодина",1],["Клиент плаща стария си дълг",0]],
+   why:"При всяка операция се променят поне две неща – и равенството се запазва."}
+ ]},
+ {time:"09:20", title:"Балансът след операциите", intro:"След четири операции (брашно, плащане на доставчик, нов кредит, витрина) сметнете новия баланс.", steps:[
+  {type:"num", q:"Сметнете новите суми", note:"Начало: оборудване 3000, продукти 400, каса 600, банка 2000; капитал 4500, кредит 1000, доставчици 500.\nОперации:\n1) брашно 200 € в брой\n2) плащане на доставчика 500 € по банка\n3) нов кредит 1000 € в банката\n4) витрина 800 € на разсрочено", fields:[
+    ["Оборудване (€)",3800],["Пари в касата (€)",400],["Пари в банката (€)",2500],["Кредит от банката (€)",2000],["Дължим на доставчици (€)",800],["Общо от всяка страна (€)",7300]],
+   why:"Оборудване 3000 + 800; каса 600 − 200; банка 2000 − 500 + 1000; кредит 1000 + 1000; доставчици 500 − 500 + 800. Двете страни: 7300 €."}
+ ]},
+ {time:"09:40", title:"Печалбата за ноември", intro:"Баничарницата е продала 2400 баници по 2 €. Разходи: продукти 2000 €, наем 300 €, ток 250 €, заплата 900 €.", steps:[
+  {type:"num", q:"Сметнете резултата за месеца", fields:[["Приходи (€)",4800],["Разходи (€)",3450],["Печалба (€)",1350]],
+   why:"2400 × 2 = 4800. 2000 + 300 + 250 + 900 = 3450. 4800 − 3450 = 1350 €."},
+  {type:"num", q:"Токът поскъпва с 50%. Каква става печалбата?", note:"Всичко друго е същото.", fields:[["Нов разход за ток (€)",375],["Нова печалба (€)",1225]],
+   why:"250 + 50% = 375 €. Разходи 3575 €, печалба 4800 − 3575 = 1225 €."}
+ ]},
+ {time:"10:00", title:"Касата", intro:"Сега сте касиер в общината. Хората внасят и получават пари в брой.", steps:[
+  {type:"match", q:"Приходен или разходен касов ордер?", choices:["ПКО – приходен","РКО – разходен"], rows:[
+    ["Георги Николов внася 12,50 € такса за справка",0],["Изплащате на Елена 25,00 € за купени консумативи",1],["Анна Колева внася 103,40 € данък сгради",0],["Аванс 40,00 € за командировка до Смолян",1],["Оборот от продажби 320,00 € влиза в касата",0]],
+   why:"Приход – парите идват при нас. Разход – парите излизат от нас."},
+  {type:"mc", q:"Как се пише 103,40 € с думи?", opts:["сто и три евро и четиридесет цента","сто и тридесет и четири евро","сто и три евро"], a:0,
+   why:"Евро и центове отделно. Без центовете сумата не е пълна."},
+  {type:"mc", q:"Защо сумата се пише и с думи?", opts:["За да е по-красиво","Защото числото лесно се поправя – от 15 става 75","Така е по-бързо"], a:1,
+   why:"Думите са защита от подправяне. Ако числото и думите се различават, се вярва на думите."},
+  {type:"mc", q:"Кой НЕ подписва разходния касов ордер?", opts:["Получилият парите","Ръководителят, разпоредил плащането","Съседът на касиера"], a:2,
+   why:"Подписват получилият, касиерът, ръководителят и счетоводителят."}
+ ]},
+ {time:"10:20", title:"Касовата книга", intro:"Началната наличност в касата е 200,00 €. Водете касовата книга през деня.", steps:[
+  {type:"num", q:"Каква е наличността след всяко събитие?", note:"1) Продадени баници за 180,00 €\n2) Платено за яйца 36,50 €\n3) Продадени баници за 245,00 €\n4) Изплатен аванс 50,00 €", fields:[
+    ["След 1 (€)",380],["След 2 (€)",343.5],["След 3 (€)",588.5],["След 4 – крайна наличност (€)",538.5]],
+   why:"Наличност = предишната + приход − разход. 200 + 180 = 380; − 36,50 = 343,50; + 245 = 588,50; − 50 = 538,50 €."},
+  {type:"order", q:"В касата липсват 10 €. Подредете какво правите", items:[
+    "Преброявам парите отново, спокойно",
+    "Проверявам дали всички ордери са записани и сумите са верни",
+    "Ако разликата остане – съобщавам веднага на ръководителя",
+    "Съставя се протокол"],
+   why:"Никога не покриваме тайно разликата и не я крием."}
+ ]},
+ {time:"10:40", title:"ДДС", intro:"ДДС = основа × 0,20. Обща сума = основа + ДДС. Основа = сума с ДДС ÷ 1,2.", steps:[
+  {type:"num", q:"Сметнете ДДС и общата сума", fields:[["Основа 100 € → ДДС (€)",20],["Основа 100 € → обща сума (€)",120],["Основа 37,50 € → ДДС (€)",7.5],["Основа 85 € → обща сума (€)",102]],
+   why:"100 × 0,2 = 20 → 120. 37,50 × 0,2 = 7,50. 85 × 0,2 = 17 → 102."},
+  {type:"num", q:"Сметнете основата от сумата с ДДС", fields:[["Сума 180 € → основа (€)",150],["Сума 6 € → основа (€)",5],["Сума 240 € → ДДС (€)",40]],
+   why:"Делим на 1,2: 180 ÷ 1,2 = 150; 6 ÷ 1,2 = 5; 240 ÷ 1,2 = 200, ДДС = 40."},
+  {type:"mc", q:"Сума с ДДС 60 €. Колега казва: „Основата е 60 − 20% = 48 €.“ Прав ли е?", opts:["Да","Не – основата е 60 ÷ 1,2 = 50 €","Не – основата е 60 €"], a:1,
+   why:"ДДС е 20% от основата, не от сумата. Затова делим на 1,2."}
+ ]},
+ {time:"11:00", title:"Фактурата", intro:"„Родопски мед“ ЕООД продава на „Хотел Родопи“ ООД 20 буркана мед по 8,00 € без ДДС.", steps:[
+  {type:"num", q:"Сметнете сумите във фактурата", fields:[["Данъчна основа (€)",160],["ДДС 20% (€)",32],["Обща сума (€)",192]],
+   why:"20 × 8 = 160. 160 × 0,2 = 32. 160 + 32 = 192 €."},
+  {type:"spot", q:"Докоснете проблемите в тази фактура", toks:[
+    ["Фактура № 0000000102",0],["\n"],["Доставчик: ……",1,"Липсва доставчикът – име и ЕИК."],["\n"],["Получател: Община Рудозем",1,"Липсва ЕИК на получателя."],["\n"],["Дата: 20.11.2026",0],["\n"],["Хартия А4 – 5 пакета × 6,00 €",0],["\n"],["Данъчна основа: 30,00 €",0],["ДДС 20%: 6,00 €",0],["\n"],["Обща сума: 32,00 €",1,"Грешна сума: 30 + 6 = 36,00 €."]],
+   why:"Проверяваме данните на двете страни и смятаме сумите отново."},
+  {type:"mc", q:"Какво правите с грешна фактура?", opts:["Плащам я, после ще видим","Връщам я на доставчика с учтива молба за нова, правилна фактура","Поправям я на ръка"], a:1,
+   why:"Фактурата се издава от доставчика – само той може да издаде нова. Не поправяме чужди документи."}
+ ]},
+ {time:"11:20", title:"Плащане по банков път", intro:"Хотелът ще плати фактурата за мед по банков път.", steps:[
+  {type:"order", q:"Подредете документите при една покупка", items:[
+    "Поръчка – имейл до доставчика",
+    "Приемо-предавателен протокол – стоката пристига",
+    "Фактура – регистрира се в деловодството",
+    "Платежно нареждане – плащане по банков път",
+    "Всичко при счетоводителя и после в архива"],
+   why:"Първо проверяваме, че стоката е дошла, и чак тогава плащаме."},
+  {type:"mc", q:"Какво пишете в полето „Основание“ на платежното?", opts:["„Пари“","„Плащане по фактура № 0000000045 / 20.11.2026“","Нищо"], a:1,
+   why:"Без номера на фактурата получателят не знае за какво сте платили."},
+  {type:"mc", who:"Пристига имейл:", say:"„Здравейте, сменихме си банковата сметка. Моля, платете фактурата по новия IBAN още днес!“", q:"Какво правите?", opts:["Плащам веднага – спешно е","Звъня на доставчика на познат телефон и питам","Отговарям на имейла и питам дали е вярно"], a:1,
+   why:"Това е честа измама. Проверяваме по телефон, който вече знаем – не от самия имейл."},
+  {type:"mc", q:"Колко знака има българският IBAN?", opts:["10","16","22"], a:2,
+   why:"Започва с BG и има 22 знака. Една грешна цифра – и парите отиват другаде."}
+ ]},
+ {time:"11:40", title:"Инвентаризация", intro:"Вие сте в комисията. Сравнявате преброеното с документите.", steps:[
+  {type:"order", q:"Подредете как се брои на практика", items:[
+    "Комисията се назначава със заповед",
+    "Броим стая по стая, по ред",
+    "Записваме всеки предмет по инвентарния номер и състоянието му",
+    "Сравняваме с данните в счетоводството",
+    "Описът и протоколът се подписват от комисията"],
+   why:"По ред и от няколко души – така броенето е честно и точно."},
+  {type:"num", q:"Сметнете стойността на разликите", note:"Компютър 600 €: по документи 10, преброени 9\nСтол 40 €: по документи 20, преброени 21\nТонер касета 55 €: по документи 12, преброени 10", fields:[
+    ["Липса на компютри (€)",600],["Липса на тонер касети (€)",110],["Общо липси (€)",710],["Излишък на столове (€)",40]],
+   why:"1 × 600 = 600; 2 × 55 = 110; общо 710. Столове: 1 × 40 = 40 € излишък."},
+  {type:"mc", q:"Може ли излишъкът на столове да покрие липсата на компютър?", opts:["Да, нали се изравнява малко","Не – всяка разлика се отчита отделно","Само ако шефът каже"], a:1,
+   why:"Принципът „некомпенсиране“: липси и излишъци не се прихващат."}
+ ]},
+ {time:"12:00", title:"Бракуване", intro:"Последната задача: кое се бракува и как се пише протоколът.", steps:[
+  {type:"match", q:"Бракуваме ли?", choices:["Да","Не"], rows:[
+    ["Стол със счупен крак, ремонт за 5 €",1],["Компютър на 15 години, който не работи с новите програми",0],["Бюро, което просто не ни харесва",1],["Принтер, чийто ремонт струва повече от нов",0]],
+   why:"Бракуваме, когато вещта е негодна и ремонтът е неизгоден. „Не ни харесва“ не е причина."},
+  {type:"order", q:"Подредете частите на протокола за бракуване", items:[
+    "Дата и състав на комисията",
+    "Какво бракуваме – с инвентарния номер",
+    "Причина",
+    "Предложение какво да стане с вещта",
+    "Подписи и „Утвърждавам“ от ръководителя"],
+   why:"След утвърждаването вещта се отписва от счетоводството и се предава за отпадъци или рециклиране."}
+ ]}
+];
+
+const KEY="den9-schetovodstvo-v1";
+const MAX = TASKS.reduce((n,t)=>n+t.steps.length*10,0);
+let S = load() || {name:"", t:-1, s:0, scores:{}, ans:{}};
+if(!S.ans) S.ans={};
+const app = document.getElementById("app");
+
+function load(){ try{ const v=localStorage.getItem(KEY); return v?JSON.parse(v):null }catch(e){ return null } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)) }catch(e){} }
+function total(){ return Object.values(S.scores).reduce((a,b)=>a+b,0) }
+function el(tag, attrs={}, kids=[]){
+  const e=document.createElement(tag);
+  for(const [k,v] of Object.entries(attrs)){
+    if(k==="class") e.className=v; else if(k==="text") e.textContent=v;
+    else if(k.startsWith("on")) e.addEventListener(k.slice(2),v); else e.setAttribute(k,v);
+  }
+  for(const c of [].concat(kids)) if(c!=null) e.append(c);
+  return e;
+}
+function shuffle(a){ const b=a.map((x,i)=>[x,i]); for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]} return b }
+function header(){
+  const top=document.getElementById("top");
+  top.hidden = S.t<0;
+  if(S.t>=0 && S.t<TASKS.length) document.getElementById("clock").textContent=TASKS[S.t].time;
+  if(S.t>=TASKS.length) document.getElementById("clock").textContent="12:10";
+  const doneSteps = Object.keys(S.scores).length, all = MAX/10;
+  document.getElementById("barfill").style.width = (100*doneSteps/all)+"%";
+  document.getElementById("pts").textContent = total()+" точки";
+}
+function feedback(score, why){
+  const cls = score>=10?"":(score>=5?" mid":" low");
+  const head = score>=10?"Отлично! +10":(score>0?`Почти! +${score}`:"Не съвсем. +0");
+  return el("div",{class:"fb"+cls,role:"status"},[el("h3",{text:head}), el("p",{text:why})]);
+}
+
+let IV=null;
+function backBtn(){ return el("button",{class:"btn ghost",text:"← Назад",onclick:prevStep}) }
+function prevStep(){
+  if(S.t>=TASKS.length){ S.t=TASKS.length-1; S.s=TASKS[S.t].steps.length-1; }
+  else if(S.s>0){ S.s--; }
+  else if(S.s===0){ S.s=-1; }
+  else if(S.t>0){ S.t--; S.s=TASKS[S.t].steps.length-1; }
+  else { S.t=-1; S.s=0; }
+  save(); render();
+}
+function render(){
+  if(IV){ clearInterval(IV); IV=null; }
+  header(); app.innerHTML=""; window.scrollTo(0,0);
+  if(S.t<0) return start();
+  if(S.t>=TASKS.length) return finish();
+  const task=TASKS[S.t];
+  if(S.s<0) return taskIntro(task);
+  step(task, task.steps[S.s]);
+}
+
+function start(){
+  const inp=el("input",{type:"text",id:"nm",autocomplete:"name",placeholder:"Име и фамилия"});
+  inp.value=S.name||"";
+  const go=el("button",{class:"btn",text:"Започни деня",onclick:()=>{
+    const v=inp.value.trim(); if(!v){inp.focus();return}
+    S.name=v; S.t=0; S.s=-1; save(); render();
+  }});
+  inp.addEventListener("keydown",e=>{if(e.key==="Enter") go.click()});
+  const list=el("ul",{class:"day"}, TASKS.map(t=>el("li",{},[el("span",{text:t.time}),el("em",{text:t.title})])));
+  app.append(el("section",{class:"sheet hero"},[
+    el("h1",{text:"Счетоводител за един ден"}),
+    el("p",{class:"lead",text:"Днес водите сметките на баничарница, касата на общината, фактурите и инвентаризацията. Пригответе калкулатора на телефона."}),
+    el("p",{text:"Всяка задача носи до 10 точки. Накрая получавате удостоверение с резултата си – покажете го на лектора."}),
+    list
+  ]), el("section",{class:"sheet"},[
+    el("div",{class:"field"},[el("label",{for:"nm",text:"Как се казвате?"}), inp]),
+    el("div",{class:"actions"},[go])
+  ]));
+}
+
+function taskIntro(task){
+  const n=S.t+1;
+  app.append(el("section",{class:"sheet"},[
+    el("p",{class:"who",text:`${task.time} · задача ${n} от ${TASKS.length}`}),
+    el("h2",{class:"q",text:task.title}),
+    el("p",{text:task.intro}),
+    el("div",{class:"actions"},[backBtn(), el("button",{class:"btn",text:"Започни задачата",onclick:()=>{S.s=0;save();render()}})])
+  ]));
+}
+
+function nextStep(){
+  const task=TASKS[S.t];
+  if(S.s+1<task.steps.length){ S.s++; save(); render(); }
+  else { S.t++; S.s=-1; save(); taskDone(task); }
+}
+function taskDone(task){
+  header(); app.innerHTML=""; window.scrollTo(0,0);
+  const idx=TASKS.indexOf(task);
+  const got=task.steps.reduce((a,_,i)=>a+(S.scores[idx+"-"+i]||0),0), max=task.steps.length*10;
+  app.append(el("section",{class:"sheet"},[
+    el("div",{class:"stamp",text:"ИЗПЪЛНЕНО"}),
+    el("p",{class:"who",text:task.time}),
+    el("h2",{class:"q",text:task.title}),
+    el("p",{text:`Получихте ${got} от ${max} точки.`}),
+    el("div",{class:"actions"},[backBtn(), el("button",{class:"btn",text:S.t<TASKS.length?"Към следващата задача":"Виж резултата",onclick:render})])
+  ]));
+}
+
+function step(task, st){
+  const key=S.t+"-"+S.s;
+  S.ans=S.ans||{};
+  const put=v=>{ S.ans[key]=v; save(); };
+  const A=S.ans[key];
+  const box=el("section",{class:"sheet"});
+  box.append(el("p",{class:"who",text:`${task.time} · ${task.title} · стъпка ${S.s+1} от ${task.steps.length}`}));
+  if(st.who) box.append(el("p",{class:"who",text:st.who}));
+  if(st.say) box.append(el("p",{class:"quote",text:st.say}));
+  const body=el("div"); box.append(body);
+  const check=el("button",{class:"btn",text:"Провери",disabled:""});
+  const next=el("button",{class:"btn",text:"Напред",hidden:""});
+  const fix=el("button",{class:"btn ghost",text:"Поправи отговора",hidden:"",onclick:()=>{ delete S.scores[key]; save(); render(); }});
+  const acts=el("div",{class:"actions"},[backBtn(),check,fix,next]);
+  box.append(acts); app.append(box);
+  next.addEventListener("click",nextStep);
+  const ready=v=>{ if(v) check.removeAttribute("disabled"); else check.setAttribute("disabled","") };
+  const R={mc,order,memory,spot,match,write,num}[st.type](st, body, ready, A, put, key in S.scores);
+  function doCheck(focus){
+    const sc=R(); S.scores[key]=sc; save(); header();
+    check.hidden=true; next.hidden=false; fix.hidden=false;
+    box.insertBefore(feedback(sc, st.why||st.done||""), acts);
+    if(focus) next.focus();
+  }
+  check.addEventListener("click",()=>doCheck(true));
+  if(key in S.scores && A!=null) doCheck(false);
+}
+
+function mc(st, body, ready, A, put){
+  body.append(el("h2",{class:"q",text:st.q}));
+  let pick=-1; const order=shuffle(st.opts);
+  const choose=(b,i)=>{ pick=i; btns.forEach(x=>x.setAttribute("aria-pressed","false")); b.setAttribute("aria-pressed","true"); ready(true); };
+  const btns=order.map(([t,i])=>el("button",{class:"opt","aria-pressed":"false",text:t,onclick:e=>{ choose(e.currentTarget,i); put(i); }}));
+  btns.forEach((b,k)=>b.dataset.i=order[k][1]);
+  body.append(el("div",{class:"opts"},btns));
+  if(A!=null){ const b=btns.find(x=>+x.dataset.i===A); if(b) choose(b,A); }
+  return ()=>{
+    btns.forEach(b=>{ b.disabled=true; const i=+b.dataset.i; if(i===st.a) b.classList.add("right"); else if(i===pick) b.classList.add("wrong") });
+    return pick===st.a?10:0;
+  };
+}
+
+function order(st, body, ready, A, put){
+  body.append(el("h2",{class:"q",text:st.q}));
+  const seq=el("div",{class:"seq"}), pool=el("div",{class:"pool"});
+  const chosen=[];
+  const refresh=()=>{
+    [...seq.children].forEach((c,k)=>c.querySelector("b").textContent=k+1);
+    [...pool.children].forEach(c=>c.querySelector("b").textContent="");
+    ready(chosen.length===st.items.length);
+  };
+  const move=(b,i)=>{
+    if(b.parentNode===pool){ seq.append(b); chosen.push(i) } else { pool.append(b); chosen.splice(chosen.indexOf(i),1) }
+    refresh();
+  };
+  const chips={};
+  shuffle(st.items).forEach(([t,i])=>{
+    const c=el("button",{class:"chip",onclick:e=>{ move(e.currentTarget,i); put(chosen.slice()); }},[el("b"),el("span",{text:t})]);
+    c.dataset.i=i; chips[i]=c; pool.append(c);
+  });
+  body.append(seq,pool);
+  if(Array.isArray(A)) A.forEach(i=>{ if(chips[i]) move(chips[i],i) });
+  return ()=>{
+    let ok=0; [...seq.children].forEach((c,k)=>{ c.disabled=true; if(+c.dataset.i===k){ok++;c.classList.add("right")} else c.classList.add("wrong") });
+    if(ok<st.items.length){
+      body.append(el("p",{class:"who",text:"Правилният ред:"}), el("ol",{class:"list"},st.items.map(t=>el("li",{text:t}))));
+    }
+    return Math.round(10*ok/st.items.length);
+  };
+}
+
+function memory(st, body, ready, A, put){
+  const ans=Object.assign({hidden:false,v:[]},A||{});
+  body.append(el("h2",{class:"q",text:"Прочетете съобщението"}));
+  const msg=el("div",{class:"msg",text:st.text});
+  let left=st.seconds; const t=el("div",{class:"timer",text:left+" с"});
+  const hide=el("button",{class:"btn ghost",text:"Запомних – скрий"});
+  body.append(msg,t,hide);
+  const form=el("div",{hidden:""});
+  const sels=st.fields.map(([lab,opts],k)=>{
+    const s=el("select",{id:"f"+k},[el("option",{value:"",text:"– изберете –"})].concat(opts.map((o,i)=>el("option",{value:i,text:o}))));
+    if(ans.v[k]!=null && ans.v[k]!=="") s.value=ans.v[k];
+    s.addEventListener("change",()=>{ ans.v=sels.map(x=>x.value); put(ans); ready(sels.every(x=>x.value!=="")); });
+    form.append(el("div",{class:"field"},[el("label",{for:"f"+k,text:lab}),s]));
+    return s;
+  });
+  body.append(form);
+  function go(){ if(IV){clearInterval(IV);IV=null} msg.remove(); t.remove(); hide.remove(); form.hidden=false; body.querySelector(".q").textContent="Попълнете бележката по памет"; ans.hidden=true; put(ans); ready(sels.every(x=>x.value!=="")); }
+  hide.addEventListener("click",go);
+  if(ans.hidden) go(); else IV=setInterval(()=>{ left--; t.textContent=left+" с"; if(left<=0) go() },1000);
+  return ()=>{
+    let ok=0; sels.forEach((s,k)=>{ s.disabled=true; if(s.value!==""&&+s.value===st.fields[k][2]){ok++;s.classList.add("right")} else { s.classList.add("wrong"); s.after(el("p",{class:"small",text:"Вярно: "+st.fields[k][1][st.fields[k][2]]})) } });
+    body.append(el("div",{class:"msg",text:st.text}));
+    return Math.round(10*ok/st.fields.length);
+  };
+}
+
+function spot(st, body, ready, A, put){
+  body.append(el("h2",{class:"q",text:st.q}));
+  const mail=el("div",{class:"mail"}); const toks=[];
+  const pressed=()=>toks.map((x,k)=>x.b.getAttribute("aria-pressed")==="true"?k:-1).filter(k=>k>=0);
+  st.toks.forEach(([t,err,why])=>{
+    if(t==="\n"){ mail.append(el("br")); return }
+    const b=el("button",{class:"tok","aria-pressed":"false",text:t,onclick:e=>{
+      const p=e.currentTarget.getAttribute("aria-pressed")==="true"; e.currentTarget.setAttribute("aria-pressed",String(!p));
+      const on=pressed(); put(on); ready(on.length>0);
+    }});
+    toks.push({b,err,why}); mail.append(b," ");
+  });
+  body.append(mail, el("p",{class:"small",text:"Докоснете всяка част, която смятате за грешка. Внимание: не всичко е грешно."}));
+  if(Array.isArray(A)){ A.forEach(k=>toks[k]&&toks[k].b.setAttribute("aria-pressed","true")); ready(A.length>0); }
+  return ()=>{
+    const errs=toks.filter(x=>x.err).length; let hit=0, fals=0;
+    const ul=el("ul",{class:"list"});
+    toks.forEach(x=>{ const on=x.b.getAttribute("aria-pressed")==="true"; x.b.disabled=true;
+      if(x.err&&on){hit++;x.b.classList.add("hit")} else if(x.err){x.b.classList.add("miss")} else if(on){fals++;x.b.classList.add("false")}
+      if(x.err) ul.append(el("li",{text:`${x.b.textContent} – ${x.why}`}));
+    });
+    body.append(el("p",{class:"who",text:`Намерихте ${hit} от ${errs} грешки${fals?`, ${fals} правилни части отбелязахте като грешни`:""}.`}), ul);
+    return Math.max(0,Math.round(10*(hit-fals)/errs));
+  };
+}
+
+function match(st, body, ready, A, put){
+  body.append(el("h2",{class:"q",text:st.q}));
+  const v=Array.isArray(A)?A:[];
+  const sels=st.rows.map(([t],k)=>{
+    const s=el("select",{id:"m"+k},[el("option",{value:"",text:"– вид документ –"})].concat(st.choices.map((c,i)=>el("option",{value:i,text:c}))));
+    if(v[k]!=null && v[k]!=="") s.value=v[k];
+    s.addEventListener("change",()=>{ put(sels.map(x=>x.value)); ready(sels.every(x=>x.value!=="")); });
+    body.append(el("div",{class:"field"},[el("label",{for:"m"+k,text:t}),s]));
+    return s;
+  });
+  ready(sels.every(x=>x.value!==""));
+  return ()=>{
+    let ok=0; sels.forEach((s,k)=>{ s.disabled=true; const a=st.rows[k][1]; if(s.value!==""&&+s.value===a){ok++;s.classList.add("right")} else { s.classList.add("wrong"); s.after(el("p",{class:"small",text:"Вярно: "+st.choices[a]})) } });
+    return Math.round(10*ok/st.rows.length);
+  };
+}
+
+
+function fmt(v){ return Number(v).toLocaleString("bg-BG",{minimumFractionDigits:v%1?2:0,maximumFractionDigits:2}) }
+function num(st, body, ready, A, put){
+  body.append(el("h2",{class:"q",text:st.q}));
+  if(st.note) body.append(el("p",{class:"note",text:st.note}));
+  const v=Array.isArray(A)?A:[];
+  const parse=x=>{ const t=String(x).replace(/\s|€/g,"").replace(",","."); return t===""||isNaN(+t)?null:+t };
+  const ins=st.fields.map(([lab],k)=>{
+    const i=el("input",{type:"text",inputmode:"decimal",id:"n"+k,autocomplete:"off",placeholder:"0"});
+    if(v[k]!=null) i.value=v[k];
+    i.addEventListener("input",()=>{ put(ins.map(x=>x.value)); ready(ins.every(x=>parse(x.value)!==null)); });
+    body.append(el("div",{class:"field"},[el("label",{for:"n"+k,text:lab}),i]));
+    return i;
+  });
+  ready(ins.every(x=>parse(x.value)!==null));
+  return ()=>{
+    let ok=0; ins.forEach((i,k)=>{ i.disabled=true; const a=st.fields[k][1], g=parse(i.value);
+      if(g!==null && Math.abs(g-a)<0.011){ok++;i.classList.add("right")} else { i.classList.add("wrong"); i.after(el("p",{class:"small",text:"Вярно: "+fmt(a)})) } });
+    return Math.round(10*ok/st.fields.length);
+  };
+}
+
+function write(st, body, ready, A, put){
+  body.append(el("h2",{class:"q",text:st.q}), el("p",{class:"note",text:st.note}));
+  const v=Array.isArray(A)?A:[];
+  const ok=()=>tas.every(x=>x.value.trim().length>3);
+  const tas=st.fields.map(([lab,ph],k)=>{
+    const ta=el("textarea",{id:"w"+k,placeholder:ph});
+    if(v[k]) ta.value=v[k];
+    ta.addEventListener("input",()=>{ put(tas.map(x=>x.value)); ready(ok()); });
+    body.append(el("div",{class:"field"},[el("label",{for:"w"+k,text:lab}),ta]));
+    return ta;
+  });
+  ready(ok());
+  return ()=>{
+    const txt=tas.map(t=>t.value.trim()).join(" ");
+    tas.forEach(t=>t.disabled=true);
+    S.intro=txt; save();
+    body.append(el("p",{class:"who",text:"Вашият отговор:"}), el("div",{class:"msg",text:txt}));
+    return 10;
+  };
+}
+
+function finish(){
+  const sc=total(), pct=sc/MAX;
+  const verdict = pct>=0.85?"Отличен счетоводител!":pct>=0.6?"Добър счетоводител!":"Добро начало – прегледайте задачите още веднъж.";
+  const d=new Date(); const date=String(d.getDate()).padStart(2,"0")+"."+String(d.getMonth()+1).padStart(2,"0")+"."+d.getFullYear()+" г.";
+  app.append(el("section",{class:"sheet cert"},[
+    el("p",{class:"who",text:"Курс „Административни и офис дейности“ · с. Чепинци"}),
+    el("h1",{text:"Удостоверение"}),
+    el("p",{text:"за успешно изкаран ден като счетоводител"}),
+    el("p",{class:"name",text:S.name}),
+    el("p",{class:"score",text:`${sc} / ${MAX}`}),
+    el("p",{text:verdict}),
+    el("div",{class:"stamp",text:"ПРИЕТО"}),
+    el("p",{class:"small",text:date})
+  ]));
+  if(S.intro) app.append(el("section",{class:"sheet"},[el("h2",{class:"q",text:"Вашият отговор за интервю"}),el("div",{class:"msg",text:S.intro}),el("p",{class:"small",text:"Препишете го в тетрадката си."})]));
+  app.append(el("section",{class:"sheet"},[
+    el("p",{text:"Покажете този екран на лектора."}),
+    el("div",{class:"actions"},[backBtn(), el("button",{class:"btn ghost",text:"Започни отначало",onclick:()=>{ if(confirm("Да изтрием ли резултата и да започнем отначало?")){ S={name:S.name,t:-1,s:0,scores:{},ans:{}}; save(); render(); } }})])
+  ]));
+}
+
+render();
+</script>
+</body>
+</html>
